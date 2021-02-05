@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/views/pages/signin_option_view.dart';
+import 'package:lando/views/pages/signin_view.dart';
 import 'package:lando/views/widget/gradient_button.dart';
 
 class GetStartedView extends StatefulWidget {
@@ -49,7 +50,7 @@ class _GetStartedViewState extends State<GetStartedView> {
                           child: Text('Get Started',style: TextStyle(fontSize: 18,color: Colors.white,fontWeight: FontWeight.w400),),
                           gradient: LinearGradient(colors: [MyColors.COLOR_PRIMARY_LIGHT,MyColors.COLOR_PRIMARY_DARK,]),
                           height: 45,
-                          onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => SigninOptionView()));},
+                          onPressed: (){Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SigninOptionView()));},
                         )
                         ),
                         SizedBox(width: 15,),
@@ -57,7 +58,7 @@ class _GetStartedViewState extends State<GetStartedView> {
                           gradient: LinearGradient(colors: [MyColors.COLOR_PRIMARY_LIGHT,MyColors.COLOR_PRIMARY_DARK,]),
                           height: 45,
                           width: 100,
-                          onPressed: (){Navigator.push(context, MaterialPageRoute(builder: (context) => SigninOptionView()));},
+                          onPressed: (){Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SigninView()));},
                         )
                       ],
                     ),
