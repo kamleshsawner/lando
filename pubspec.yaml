@@ -24,11 +24,16 @@ dependencies:
 
   cloud_firestore: ^0.16.0
   firebase_auth: ^0.20.0+1
+  firebase_core: ^0.7.0
+  google_sign_in: ^4.5.9
   flutter_swiper: ^1.1.6
   fluttertoast: ^7.1.6
   connectivity: ^2.0.2
   http: ^0.12.2
   flutter_session: ^0.1.1
+  provider: ^4.3.2+2
+  font_awesome_flutter: ^8.10.0
+  image_picker: ^0.6.7+15
   flutter:
     sdk: flutter
 
@@ -58,6 +63,7 @@ flutter:
     - assets/images/splash.png
     - assets/images/dummy_home.png
     - assets/images/dummy_profile.jpeg
+    - assets/images/list_dummy.png
     - assets/icons/google.png
     - assets/icons/facebook.png
     - assets/icons/nav_friends.png
@@ -65,6 +71,7 @@ flutter:
     - assets/icons/nav_prime.png
     - assets/icons/nav_profile.png
     - assets/icons/nav_setting.png
+    - assets/icons/context_menu.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

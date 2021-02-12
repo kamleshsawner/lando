@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_session/flutter_session.dart';
 import 'package:lando/api/api_services.dart';
+import 'package:lando/model/request_model/request_selectdestination.dart';
 import 'package:lando/model/response_model/response_destination.dart';
-import 'package:lando/model/venue.dart';
+import 'package:lando/model/response_model/response_message.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
@@ -14,6 +15,7 @@ import 'package:lando/views/pages/edit_profile_view.dart';
 import 'package:lando/views/pages/friends_view.dart';
 import 'package:lando/views/pages/package_view.dart';
 import 'package:lando/views/pages/setting_view.dart';
+import 'package:lando/views/pages/venue_user_view.dart';
 import 'package:lando/views/widget/center_circle_indicator.dart';
 
 class HomeView extends StatefulWidget {
@@ -25,6 +27,7 @@ class _HomeViewState extends State<HomeView> {
 
   var _scaffold_key = GlobalKey<ScaffoldState>();
   var is_loading = true;
+  var is_loading_select = false;
   ResponseDestination responseDestination;
 
   void exitApp() {
@@ -68,13 +71,11 @@ class _HomeViewState extends State<HomeView> {
 
   // get data
   Future<Null> getData() async {
-    await FlutterSession().get(MyConstant.SESSION_TOKEN).then((token) => {
-      APIServices().getDestination(token).then((dest_value) => {
-        responseDestination = dest_value,
-        setState(() {
-          is_loading = false;
-        }),
-      })
+    await APIServices().getDestination().then((dest_value) => {
+      responseDestination = dest_value,
+      setState(() {
+        is_loading = false;
+      }),
     });
   }
 
@@ -82,7 +83,7 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
 
     var size = MediaQuery.of(context).size;
-    final double itemHeight = (size.height - kToolbarHeight) / 2.5;
+    final double itemHeight = (size.height - kToolbarHeight) / 2.7;
     final double itemWidth = size.width / 2;
 
     return WillPopScope(
@@ -103,67 +104,100 @@ class _HomeViewState extends State<HomeView> {
             });
           },
         ),
-        body: Stack(
-          children: <Widget>[
-            Container(
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [MyColors.COLOR_PRIMARY_DARK,MyColors.COLOR_PRIMARY_LIGHT],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter
-                  )
-              ),
-              child: Stack(
-                children: <Widget>[
-                  Container(
-                    height: 50,
-                    padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
-                    child: Row(
-                      children: <Widget>[
-                        IconButton(
-                          icon: Icon(Icons.menu,size: 30),
-                          color: Colors.white,
-                          onPressed: (){
-                            _scaffold_key.currentState.openDrawer();
-                          },
-                        ),
-                        Expanded(child: Image.asset(MyAssets.ASSET_IMAGE_LOGO)),
-                        Icon(Icons.chat_bubble,color: Colors.white,size: 25,),
-                      ],
+        body: Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [MyColors.COLOR_PRIMARY_DARK,MyColors.COLOR_PRIMARY_LIGHT],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter
+              )
+          ),
+          child: Stack(
+            children: <Widget>[
+              Container(
+                height: 50,
+                padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
+                child: Row(
+                  children: <Widget>[
+                    IconButton(
+                      icon: Icon(Icons.menu,size: 30),
+                      color: Colors.white,
+                      onPressed: (){
+                        _scaffold_key.currentState.openDrawer();
+                      },
                     ),
-                  ),
-                  Container(margin : EdgeInsets.only(top: 50),height: 1,color: Colors.white,),
-                  is_loading ? CenterCircleIndicator() :
-                  responseDestination.dest_list.length >0  ?
-                  Container(
-                    margin: EdgeInsets.only(top: 55),
-                    child: ListView(
-                      children: <Widget>[
-                        Container(
-                          margin: EdgeInsets.only(left: 15, right: 15, bottom: 15),
-                          child: GridView.count(
-                              physics: ScrollPhysics(),
-                              shrinkWrap: true,
-                              crossAxisCount: 2,
-                              childAspectRatio: (itemWidth / itemHeight),
-                              children: List.generate(Venue.getVenuelist().length, (index) {
-                                return Center(
-                                  child: VenueAdapterView(
-                                      selected_venue:
-                                      Venue.getVenuelist()[index]),
-                                );
-                              })),
-                        )
-                      ],
-                    ),
-                  ) : Text(''),
-                ],
+                    Expanded(child: Image.asset(MyAssets.ASSET_IMAGE_LOGO)),
+                    Icon(Icons.chat_bubble,color: Colors.white,size: 25,),
+                  ],
+                ),
               ),
-            )
-          ],
+              Container(margin : EdgeInsets.only(top: 50),height: 1,color: Colors.white,),
+              is_loading ? CenterCircleIndicator() :
+              responseDestination.dest_list != null && responseDestination.dest_list.length >0  ?
+              Container(
+                margin: EdgeInsets.only(top: 55),
+                child: Container(
+                  margin: EdgeInsets.only(left: 15, right: 15, bottom: 15),
+                  child: GridView.count(
+                      physics: ScrollPhysics(),
+                      shrinkWrap: true,
+                      crossAxisCount: 2,
+                      childAspectRatio: (itemWidth / itemHeight),
+                      children: List.generate(responseDestination.dest_list.length, (index) {
+                        return Center(
+                          child: DestinationAdapterView(
+                              selected_destination:
+                              responseDestination.dest_list[index],
+                            height: itemHeight,
+                            onPressed: (){
+                                submitData(responseDestination.dest_list[index]);
+                            },
+                          ),
+                        );
+                      })),
+                ),
+              ) : Text(''),
+              is_loading_select ? CenterCircleIndicator() : Text('')
+            ],
+          ),
         ),
       ),
     );
   }
+
+
+  Future<Null> submitData(Destination destination) async{
+    is_loading_select = true;
+    setState(() {
+    });
+    ResponseMessage responsemessage;
+    await FlutterSession().get(MyConstant.SESSION_ID).then((userid) => {
+      APIServices().selectDestination(RequestSelectDestination(user_id: userid.toString(),destination_id: destination.id.toString())).then((dest_value) => {
+        responsemessage = dest_value,
+        setState(() {
+          is_loading_select = false;
+        }),
+        if(responsemessage.status == 200){
+          Utility.showToast(responsemessage.message),
+          Navigator.push(context, MaterialPageRoute(
+              builder: (context) => VenueUserView(id: destination.id.toString(),name: destination.title,)
+          )),
+        }else if(responsemessage.status == 201){
+          Navigator.push(context, MaterialPageRoute(
+              builder: (context) => VenueUserView(id: destination.id.toString(),name: destination.title,)
+          )),
+        }else{
+          if(responsemessage.message == 'Group already purchased'){
+            Navigator.push(context, MaterialPageRoute(
+                builder: (context) => VenueUserView(id: destination.id.toString(),name: destination.title,)
+            )),
+          }else{
+            Utility.showInSnackBar(responsemessage.message,_scaffold_key),
+          }
+        }
+      })
+    });
+  }
+
 }
 
 class MyDrawer extends StatelessWidget {
@@ -245,4 +279,5 @@ class MyDrawer extends StatelessWidget {
       ),
     );
   }
+
 }

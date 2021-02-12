@@ -6,6 +6,7 @@ import 'package:lando/model/response_model/response_message.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/utility.dart';
+import 'package:lando/views/pages/profile/forgot_otp_view.dart';
 import 'package:lando/views/pages/signin_view.dart';
 import 'package:lando/views/widget/center_circle_indicator.dart';
 import 'package:lando/views/widget/gradient_button.dart';
@@ -132,11 +133,16 @@ class _ForgotViewState extends State<ForgotView> {
                                             colors: <Color>[MyColors.COLOR_PRIMARY_LIGHT,MyColors.COLOR_PRIMARY_DARK]
                                         ),
                                         onPressed: (){
+                                          Navigator.push(context, MaterialPageRoute(
+                                              builder: (context) => ForgotOtpView()
+                                          ));
+/*
                                           Utility().checkInternetConnection().then((internet) => {
                                             if(internet){
                                               _submit(),
                                             }
                                           });
+*/
                                         },
                                       ),
                                     ),

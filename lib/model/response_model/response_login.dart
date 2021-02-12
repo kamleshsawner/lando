@@ -6,24 +6,21 @@ class ResponseLogin{
 
   int status;
   String message;
-  String token;
   User user;
 
-  ResponseLogin({this.status,this.message,this.token,this.user});
+  ResponseLogin({this.status,this.message,this.user});
 
   factory ResponseLogin.fromjson(Map<String,dynamic> json,int status){
     if(status == 200){
       return ResponseLogin(
           status: status,
           message: json['message'],
-          token: json['data']['token'],
-          user:User.fromjson(json['data']['user'])
+          user:User.fromjson(json['users'])
       );
     }else{
       return ResponseLogin(
           status: status,
           message: json['message'],
-          token: null,
           user:null
       );
     }

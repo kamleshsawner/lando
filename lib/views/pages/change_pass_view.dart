@@ -15,14 +15,12 @@ class ChangePasswordView extends StatefulWidget {
 }
 
 class _ChangePasswordViewState extends State<ChangePasswordView> {
-
   var _formkey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   var is_loading = false;
 
   RequestChangePass requestchangepass;
   ResponseMessage responsemessage;
-
 
   @override
   void initState() {
@@ -31,7 +29,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
   }
 
   // submit
-  void _submit() async{
+  void _submit() async {
     final isValid = _formkey.currentState.validate();
     if (!isValid) {
       return;
@@ -39,19 +37,17 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
       setState(() {
         is_loading = true;
       });
-      var token = await FlutterSession().get(MyConstant.SESSION_TOKEN);
-      responsemessage = await APIServices().changePassword(requestchangepass,token);
-      if(responsemessage.status==200){
-      }else{
-        showerror(responsemessage.message);
-      }
+      var user_id = await FlutterSession().get(MyConstant.SESSION_ID);
+      requestchangepass.user_id = user_id.toString();
+      responsemessage = await APIServices().changePassword(requestchangepass);
+      showerror(responsemessage.message);
     }
     _formkey.currentState.save();
   }
 
   void showerror(String message) {
     setState(() {
-      is_loading =false;
+      is_loading = false;
       Utility.showInSnackBar(message, _scaffoldKey);
     });
   }
@@ -67,9 +63,9 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
       body: Container(
         decoration: BoxDecoration(
             gradient: LinearGradient(colors: [
-              MyColors.COLOR_PRIMARY_DARK,
-              MyColors.COLOR_PRIMARY_LIGHT
-            ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
+          MyColors.COLOR_PRIMARY_DARK,
+          MyColors.COLOR_PRIMARY_LIGHT
+        ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
         child: Stack(
           children: <Widget>[
             Container(
@@ -87,9 +83,9 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                   Expanded(
                       child: Center(
                           child: Text(
-                            'Change Password',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ))),
+                    'Change Password',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ))),
                   SizedBox(
                     width: 50,
                   )
@@ -104,8 +100,8 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                   padding: EdgeInsets.all(10),
                   children: <Widget>[
                     Padding(
-                      padding:
-                          EdgeInsets.only(top: 10, left: 25, right: 25, bottom: 10),
+                      padding: EdgeInsets.only(
+                          top: 10, left: 25, right: 25, bottom: 10),
                       child: TextFormField(
                         validator: (old) {
                           requestchangepass.old_pass = old;
@@ -117,12 +113,9 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                         obscureText: true,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                                width: 1
-                              )
-                          ),
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide(color: Colors.white, width: 1)),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
@@ -137,18 +130,18 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                               width: 1.0,
                             ),
                           ),
-
                           labelText: 'Old Password',
-                            labelStyle: TextStyle(
-                                color:Colors.white
-                            ),
-                            prefixIcon: Icon(Icons.lock,color: Colors.white,),
+                          labelStyle: TextStyle(color: Colors.white),
+                          prefixIcon: Icon(
+                            Icons.lock,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                     Padding(
-                      padding:
-                          EdgeInsets.only(top: 10, left: 25, right: 25, bottom: 10),
+                      padding: EdgeInsets.only(
+                          top: 10, left: 25, right: 25, bottom: 10),
                       child: TextFormField(
                         validator: (new_pass) {
                           requestchangepass.new_pass = new_pass;
@@ -160,12 +153,9 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                         obscureText: true,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                                width: 1
-                              )
-                          ),
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide(color: Colors.white, width: 1)),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
@@ -180,18 +170,18 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                               width: 1.0,
                             ),
                           ),
-
                           labelText: 'New Password',
-                            labelStyle: TextStyle(
-                                color:Colors.white
-                            ),
-                            prefixIcon: Icon(Icons.lock,color: Colors.white,),
+                          labelStyle: TextStyle(color: Colors.white),
+                          prefixIcon: Icon(
+                            Icons.lock,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                     Padding(
-                      padding:
-                          EdgeInsets.only(top: 10, left: 25, right: 25, bottom: 10),
+                      padding: EdgeInsets.only(
+                          top: 10, left: 25, right: 25, bottom: 10),
                       child: TextFormField(
                         validator: (conf_pass) {
                           requestchangepass.conf_password = conf_pass;
@@ -206,12 +196,9 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                         obscureText: true,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(
-                                color: Colors.white,
-                                width: 1
-                              )
-                          ),
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide:
+                                  BorderSide(color: Colors.white, width: 1)),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
                             borderSide: BorderSide(
@@ -226,12 +213,12 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                               width: 1.0,
                             ),
                           ),
-
                           labelText: 'confirm Password',
-                            labelStyle: TextStyle(
-                                color:Colors.white
-                            ),
-                          prefixIcon: Icon(Icons.lock,color: Colors.white,),
+                          labelStyle: TextStyle(color: Colors.white),
+                          prefixIcon: Icon(
+                            Icons.lock,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -248,7 +235,10 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                             },
                             child: Text(
                               'Update',
-                              style: TextStyle(color: MyColors.COLOR_PRIMARY_DARK, fontSize: 18,fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  color: MyColors.COLOR_PRIMARY_DARK,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold),
                             ),
                             shape: RoundedRectangleBorder(
                                 borderRadius: new BorderRadius.circular(10),

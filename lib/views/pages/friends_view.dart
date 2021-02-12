@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:lando/model/friends.dart';
+import 'package:flutter_session/flutter_session.dart';
+import 'package:lando/api/api_services.dart';
+import 'package:lando/model/request_model/request_token.dart';
+import 'package:lando/model/response_model/response_friend_req_list.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
+import 'package:lando/util/utility.dart';
 import 'package:lando/views/pages/friends_request_view.dart';
+import 'package:lando/views/widget/center_circle_indicator.dart';
 
 class FriendsView extends StatefulWidget {
   @override
@@ -13,6 +18,34 @@ class FriendsView extends StatefulWidget {
 class _FriendsViewState extends State<FriendsView> {
 
   var _scaffold_key = GlobalKey<ScaffoldState>();
+  var is_loading = true;
+  var success = 0;
+  ResponseFriendReqList responsefriendrequlist;
+
+  @override
+  void initState() {
+    super.initState();
+    Utility().checkInternetConnection().then((internet) => {
+      if (internet){
+        getData(),
+      }
+    });
+  }
+
+  // get data
+  Future<Null> getData() async {
+    await FlutterSession().get(MyConstant.SESSION_ID).then((userid) => {
+      APIServices().getFriendList(RequestToken(user_id: userid.toString())).then((dest_value) => {
+        responsefriendrequlist = dest_value,
+        if(responsefriendrequlist.status == 200){
+          success = 200,
+        },
+        setState(() {
+          is_loading = false;
+        }),
+      })
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,21 +111,6 @@ class _FriendsViewState extends State<FriendsView> {
                                   ),
                                 ),
                               ),
-                              Container(
-                                width: 25,height: 25,
-                                decoration: BoxDecoration(
-                                  color: MyColors.COLOR_PRIMARY_LIGHT,
-                                  borderRadius: BorderRadius.circular(15)
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '1 ',style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                           SizedBox(height: 5,),
@@ -130,12 +148,15 @@ class _FriendsViewState extends State<FriendsView> {
                       ),
                     ),
                   ),
-                ListView.builder(
-                  physics: ClampingScrollPhysics(),
-                  shrinkWrap: true,
-                  itemCount: Friends.getriendList().length,
-                  itemBuilder: (BuildContext context, int index) => FirendAdapterView(selected_friend: Friends.getriendList()[index],),
-                )
+                  is_loading ? CenterCircleIndicator() :
+                      success == 200 ? ListView.builder(
+                        physics: ClampingScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: responsefriendrequlist.user_list.length,
+                        itemBuilder: (BuildContext context, int index) => FirendAdapterView(selected_friend: responsefriendrequlist.user_list[index],),
+                      ) : Container(
+                          margin: EdgeInsets.only(top: 100),
+                          child: Center(child: Text('No Friends'),))
                 ],
               ),
             )

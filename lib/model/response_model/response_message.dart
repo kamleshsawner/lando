@@ -16,4 +16,12 @@ class ResponseMessage{
     }
   }
 
+  factory ResponseMessage.fromjsonforstatus(Map<String,dynamic> json, int status){
+    try{
+      return ResponseMessage(status:  json['status'],message: json['message']);
+    }catch(_){
+      return ResponseMessage(status: status,message: MyString.ERROR_MESSAGE);
+    }
+  }
+
 }

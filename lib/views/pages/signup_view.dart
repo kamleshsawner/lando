@@ -1,10 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_session/flutter_session.dart';
 import 'package:lando/api/api_services.dart';
 import 'package:lando/model/request_model/request_signup.dart';
 import 'package:lando/model/response_model/response_login.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
+import 'package:lando/util/myconstant.dart';
 import 'package:lando/util/utility.dart';
 import 'package:lando/views/pages/question_view.dart';
 import 'package:lando/views/pages/signin_option_view.dart';
@@ -16,8 +18,6 @@ class SignUpView extends StatefulWidget {
   @override
   _SignUpViewState createState() => _SignUpViewState();
 }
-
-
 
 class _SignUpViewState extends State<SignUpView> {
 
@@ -46,11 +46,27 @@ class _SignUpViewState extends State<SignUpView> {
       });
       responseLogin = await APIServices().userSignup(requestSignup);
       if(responseLogin.status==200){
+        setData();
       }else{
         showerror(responseLogin.message);
       }
     }
     _formkey.currentState.save();
+  }
+
+  void setData() async{
+    var session = FlutterSession();
+    await session.set(MyConstant.SESSION_ID, responseLogin.user.id);
+    await session.set(MyConstant.SESSION_NAME, responseLogin.user.name);
+    await session.set(MyConstant.SESSION_EMAIL, responseLogin.user.email);
+    await session.set(MyConstant.SESSION_DOB, responseLogin.user.birth_date);
+    await session.set(MyConstant.SESSION_PHONE, responseLogin.user.mobile);
+    await session.set(MyConstant.SESSION_IMAGE, responseLogin.user.image);
+    await session.set(MyConstant.SESSION_IS_LOGIN, true);
+    setState(() {
+      is_loading =false;
+    });
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => QuestionsView()));
   }
 
   void showerror(String message) {
@@ -194,7 +210,6 @@ class _SignUpViewState extends State<SignUpView> {
                                         ),
                                       ),
                                     ),
-
                                     Container(
                                       margin: EdgeInsets.fromLTRB(20,40,20,30),
                                       child: MyGradientButton(

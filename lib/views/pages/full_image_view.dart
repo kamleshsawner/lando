@@ -1,11 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lando/model/friends.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
-import 'package:lando/util/myconstant.dart';
-import 'package:lando/views/pages/friends_request_view.dart';
-import 'package:lando/views/widget/gradient_button.dart';
 
 class FullImageView extends StatefulWidget {
   @override

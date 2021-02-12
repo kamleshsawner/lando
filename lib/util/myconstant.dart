@@ -25,11 +25,12 @@ class MyConstant{
   static const String LOGOUT_NO = 'No';
 
   // session
-  static const String SESSION_TOKEN = 'token';
   static const String SESSION_ID = 'id';
   static const String SESSION_NAME = 'name';
   static const String SESSION_IMAGE = 'image';
   static const String SESSION_EMAIL = 'email';
   static const String SESSION_PHONE = 'phone';
+  static const String SESSION_DOB = 'dob';
+  static const String SESSION_IS_LOGIN = 'is_login';
 
 }

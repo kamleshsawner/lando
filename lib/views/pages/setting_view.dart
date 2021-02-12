@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_session/flutter_session.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
 import 'package:lando/util/mystrings.dart';
+import 'package:lando/views/dialog/dialog_logout.dart';
 import 'package:lando/views/pages/a_t_p_view.dart';
 import 'package:lando/views/pages/bloc_user_view.dart';
 import 'package:lando/views/pages/change_pass_view.dart';
 import 'package:lando/views/pages/contact_us_view.dart';
 import 'package:lando/views/pages/edit_profile_view.dart';
+import 'package:lando/views/pages/signin_view.dart';
 
 class SettingView extends StatefulWidget {
   @override
@@ -138,6 +141,20 @@ class _SettingViewState extends State<SettingView> {
           builder: (context) => ATPView(title: name,cotent: MyString.DUMMY_CONTENT,)
       ));
     }
+    if(name == MyConstant.SETTING_LOGOUT){
+        showDialog(
+            context: context,
+            builder: (BuildContext context) => DialogLogout()).then((value) {
+          if (value == MyConstant.LOGOUT_YES) {
+            FlutterSession().set(MyConstant.SESSION_ID, '');
+            Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => SigninView()),
+                ModalRoute.withName("/"));
+          }
+        });
+    }
+
   }
 
 }

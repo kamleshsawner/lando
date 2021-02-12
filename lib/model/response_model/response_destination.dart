@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+import 'package:lando/util/myassets.dart';
 
 class ResponseDestination{
 
@@ -6,42 +8,72 @@ class ResponseDestination{
   List<Destination> dest_list;
 
   ResponseDestination({this.status,this.message,this.dest_list});
-
-  factory ResponseDestination.fromjson(Map<String,dynamic> json,int status){
-    if(status == 200){
-
-      var list_array = json['data'] as List;
-      List<Destination> list = list_array.map((e) => Destination.fromjson(e));
-
-      return ResponseDestination(
-          status: status,
-          message: json['message'],
-          dest_list:list
-      );
-    }else{
-      return ResponseDestination(
-          status: status,
-          message: json['message'],
-          dest_list:null
-      );
-    }
-  }
-
 }
 
 class Destination{
 
   int id;
-  String name;
+  String title;
   String image;
 
-  Destination({this.id,this.name,this.image});
+  Destination({this.id,this.title,this.image});
 
   factory Destination.fromjson(Map<String,dynamic> json){
     return Destination(
-      id: json[''],
-      name: json[''],
-      image : json[''],
+      id: json['id'],
+      title: json['title'],
+      image : 'https://lando.wrappex.com/storage/'+json['group_image'],
+    );
+  }
+
+}
+
+
+class DestinationAdapterView extends StatelessWidget{
+
+  final Destination selected_destination;
+  final double height;
+  final Function onPressed;
+
+  const DestinationAdapterView({Key key, this.selected_destination,@required this.height,this.onPressed}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        margin: EdgeInsets.all(5),
+        width: MediaQuery.of(context).size.width/2.2,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.white,
+        ),
+        child: Column(
+          children: <Widget>[
+            Container(
+              color: Colors.grey,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: FadeInImage(
+                  image: NetworkImage(selected_destination.image),
+                  placeholder: AssetImage(MyAssets.ASSET_IMAGE_LOGO),
+                  height: height-80,
+                  fit: BoxFit.fill,
+                  width: MediaQuery.of(context).size.width/2.2,
+                )
+            ),),
+            Container(
+              child: Flexible(
+                child: Container(
+                  alignment: Alignment.center,
+                  padding: EdgeInsets.all(5),
+                  child: Text(selected_destination.title, style: TextStyle(fontSize: 14,color: Colors.black)),),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

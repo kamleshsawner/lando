@@ -6,7 +6,7 @@ class RequestForgot{
   RequestForgot({this.mobile});
 
   Map<String,dynamic> tojson() => {
-    '':this.mobile,
+    'mobile':this.mobile,
   };
 
 }

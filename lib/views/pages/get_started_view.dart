@@ -12,6 +12,12 @@ class GetStartedView extends StatefulWidget {
 }
 
 class _GetStartedViewState extends State<GetStartedView> {
+
+  @override
+  void initState(){
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,4 +77,6 @@ class _GetStartedViewState extends State<GetStartedView> {
       ),
     );
   }
+
+
 }

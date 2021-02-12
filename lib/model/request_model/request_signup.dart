@@ -9,10 +9,10 @@ class RequestSignup{
   RequestSignup({this.email,this.name,this.password,this.mobile});
 
   Map<String,dynamic> tojson() => {
-    '':this.name,
-    '':this.email,
-    '':this.mobile,
-    '':this.password,
+    'name':this.name,
+    'email':this.email,
+    'phone':this.mobile,
+    'password':this.password,
   };
 
 }

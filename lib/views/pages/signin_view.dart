@@ -1,18 +1,22 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_session/flutter_session.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lando/api/api_services.dart';
 import 'package:lando/model/request_model/request_login.dart';
 import 'package:lando/model/response_model/response_login.dart';
-import 'package:lando/model/response_model/response_message.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
+import 'package:lando/util/myconstant.dart';
 import 'package:lando/util/utility.dart';
-import 'package:lando/views/pages/forgot_view.dart';
 import 'package:lando/views/pages/home_view.dart';
 import 'package:lando/views/pages/signin_option_view.dart';
 import 'package:lando/views/pages/signup_view.dart';
 import 'package:lando/views/widget/center_circle_indicator.dart';
 import 'package:lando/views/widget/gradient_button.dart';
+
+import 'profile/forgot_view.dart';
 
 class SigninView extends StatefulWidget {
   @override
@@ -27,6 +31,9 @@ class _SigninViewState extends State<SigninView> {
 
   RequestLogin requestLogin;
   ResponseLogin responseLogin;
+
+  // google login
+  final googleSignIn = GoogleSignIn();
 
 
   @override
@@ -46,12 +53,63 @@ class _SigninViewState extends State<SigninView> {
       });
       responseLogin = await APIServices().userLogin(requestLogin);
       if(responseLogin.status==200){
+        setData();
       }else{
         showerror(responseLogin.message);
       }
     }
     _formkey.currentState.save();
   }
+
+  void setData() async{
+    var session = FlutterSession();
+    await session.set(MyConstant.SESSION_ID, responseLogin.user.id);
+    await session.set(MyConstant.SESSION_NAME, responseLogin.user.name);
+    await session.set(MyConstant.SESSION_EMAIL, responseLogin.user.email);
+    await session.set(MyConstant.SESSION_DOB, responseLogin.user.birth_date);
+    await session.set(MyConstant.SESSION_PHONE, responseLogin.user.mobile);
+    await session.set(MyConstant.SESSION_IMAGE, responseLogin.user.image);
+    await session.set(MyConstant.SESSION_IS_LOGIN, true);
+    setState(() {
+      is_loading =false;
+    });
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeView()));
+  }
+
+  void setSocialloginData() async{
+    setState(() {
+      is_loading = true;
+    });
+    final user = FirebaseAuth.instance.currentUser;
+    var session = FlutterSession();
+    await session.set(MyConstant.SESSION_ID, user.uid);
+    await session.set(MyConstant.SESSION_NAME, user.displayName);
+    await session.set(MyConstant.SESSION_EMAIL, user.email);
+    await session.set(MyConstant.SESSION_IMAGE, user.photoURL);
+    await session.set(MyConstant.SESSION_IS_LOGIN, true);
+    setState(() {
+      is_loading =false;
+    });
+    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeView()));
+  }
+
+  Future googleLogin() async {
+    is_loading = true;
+    final user = await googleSignIn.signIn();
+    if (user == null) {
+      is_loading = false;
+      return;
+    } else {
+      final googleAuth = await user.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+      setSocialloginData();
+    }
+  }
+
 
   void showerror(String message) {
     setState(() {
@@ -171,8 +229,7 @@ class _SigninViewState extends State<SigninView> {
                                         onPressed: (){
                                           Utility().checkInternetConnection().then((internet) => {
                                             if(internet){
-                                              // _submit(),
-                                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeView()))
+                                              _submit(),
                                         }
                                           });
                                         },
@@ -192,9 +249,14 @@ class _SigninViewState extends State<SigninView> {
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: <Widget>[
-                                        Container(
-                                          padding: EdgeInsets.all(15),
-                                          child: Image.asset(MyAssets.ASSET_ICON_GOOGLE,width: 40,height: 40,),
+                                        GestureDetector(
+                                          onTap: (){
+                                            // googleLogin();
+                                          },
+                                          child: Container(
+                                            padding: EdgeInsets.all(15),
+                                            child: Image.asset(MyAssets.ASSET_ICON_GOOGLE,width: 40,height: 40,),
+                                          ),
                                         ),
                                         SizedBox(width: 50,),
                                         Container(
@@ -231,4 +293,6 @@ class _SigninViewState extends State<SigninView> {
       ),
     );
   }
+
+
 }

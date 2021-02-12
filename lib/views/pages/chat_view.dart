@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:lando/model/friend_request.dart';
-import 'package:lando/model/friends.dart';
-import 'package:lando/model/venue_users.dart';
+import 'package:flutter_session/flutter_session.dart';
+import 'package:lando/api/api_services.dart';
+import 'package:lando/model/request_model/request_check_friendship.dart';
+import 'package:lando/model/request_model/request_user_report.dart';
+import 'package:lando/model/response_model/response_destination_user.dart';
+import 'package:lando/model/response_model/response_message.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
+import 'package:lando/util/utility.dart';
 import 'package:lando/views/pages/send_request_view.dart';
+import 'package:lando/views/widget/center_circle_indicator.dart';
 
 class ChatView extends StatefulWidget {
+
+  DestinationUser user;
+
+  ChatView({this.user});
+
   @override
   _ChatViewState createState() => _ChatViewState();
 }
@@ -15,6 +25,7 @@ class ChatView extends StatefulWidget {
 class _ChatViewState extends State<ChatView> {
 
   var _scaffold_key = GlobalKey<ScaffoldState>();
+  var is_loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +47,7 @@ class _ChatViewState extends State<ChatView> {
           children: <Widget>[
             Container(
               height: 55,
-              padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
+              padding: EdgeInsets.fromLTRB(15, 0, 5, 0),
               child: Row(
                 children: <Widget>[
                   IconButton(
@@ -46,15 +57,21 @@ class _ChatViewState extends State<ChatView> {
                       Navigator.pop(context);
                     },
                   ),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(35),
-                    child: Image.asset(
-                      MyAssets.ASSET_IMAGE_DUMMY_PROFILE,
-                      width: 45.0,
-                      height: 45.0,
-                      fit: BoxFit.fill,
+                  Container(
+                    decoration: BoxDecoration(
+                        color: Colors.grey,
+                        borderRadius: BorderRadius.circular(20)
                     ),
-                  ),
+                    child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: FadeInImage(
+                          image: NetworkImage(Utility.getCompletePath(widget.user.image)),
+                          placeholder: AssetImage(MyAssets.ASSET_IMAGE_LIST_DUMMY_PROFILE),
+                          height: 45,
+                          width:45,
+                          fit: BoxFit.fill,
+                        )
+                    ),),
                   Expanded(child: GestureDetector(
                     onTap: (){
                       Navigator.push(context, MaterialPageRoute(
@@ -67,18 +84,17 @@ class _ChatViewState extends State<ChatView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          Text('John',style: TextStyle(color: Colors.white,fontSize: 18),),
-                          Text('online',style: TextStyle(color: Colors.white,fontSize: 12),)
+                          Text(widget.user.name,style: TextStyle(color: Colors.white,fontSize: 18),),
                         ],
                       ),
                     ),
                   )),
-                  IconButton(
-                    icon: Icon(Icons.menu,size: 25),
-                    color: Colors.white,
-                    onPressed: (){
-                      _menuOption();
-                    },
+                  GestureDetector(
+                    onTap: (){_menuOption();},
+                    child: Container(
+                      padding: EdgeInsets.all(15),
+                      child: Image.asset(MyAssets.ASSET_ICON_CONTEXT_MENU,width: 50,height: 60,),
+                    ),
                   ),
                 ],
               ),
@@ -88,6 +104,7 @@ class _ChatViewState extends State<ChatView> {
               color: Colors.white,
               margin: EdgeInsets.only(top: 55),
             ),
+            is_loading ? CenterCircleIndicator() : Text('')
           ],
         ),
       ),
@@ -100,7 +117,7 @@ class _ChatViewState extends State<ChatView> {
         context: context,
         builder: (builder){
           return Container(
-            height: 320,
+            height: 340,
             child: Column(
               children: <Widget>[
                 Container(
@@ -111,19 +128,32 @@ class _ChatViewState extends State<ChatView> {
                   ),
                   child: Column(
                     children: <Widget>[
-                      SizedBox(height: 20,),
+                      SizedBox(height: 15,),
                       Container(
-                          padding: EdgeInsets.all(10),
+                          padding: EdgeInsets.all(12),
                           child: Center(child: Text('Select Option',style: TextStyle(color: Colors.black,fontSize: 16),),)),
                       Container(
-                          padding: EdgeInsets.all(10),
+                          padding: EdgeInsets.all(12),
                           child: Center(child: Text('Clear All Chat',style: TextStyle(color: Colors.black,fontSize: 16),),)),
-                      Container(
-                          padding: EdgeInsets.all(10),
-                          child: Center(child: Text('Report User',style: TextStyle(color: Colors.black,fontSize: 16),),)),
-                      Container(
-                          padding: EdgeInsets.all(10),
-                          child: Center(child: Text('Block User',style: TextStyle(color: Colors.red,fontSize: 16),),)),
+                      GestureDetector(
+                        onTap: (){
+                          Navigator.pop(context);
+                          reportUser();
+                        },
+                        child: Container(
+                            padding: EdgeInsets.all(12),
+                            child: Center(child: Text('Report User',style: TextStyle(color: Colors.black,fontSize: 16),),)),
+                      ),
+                      GestureDetector(
+                        onTap: (){
+                          Navigator.pop(context);
+                          blockUser();
+                        },
+                        child: Container(
+                            padding: EdgeInsets.all(12),
+                            child: Center(child: Text('Block User',style: TextStyle(color: Colors.red,fontSize: 16),),)),
+                      ),
+                      SizedBox(height: 15,),
                     ],
                   ),
                 ),
@@ -148,6 +178,38 @@ class _ChatViewState extends State<ChatView> {
           );
         }
     );
+  }
+
+  Future<Null> blockUser() async{
+    is_loading = true;
+    setState(() {
+    });
+    ResponseMessage responsemessage;
+    await FlutterSession().get(MyConstant.SESSION_ID).then((userid) => {
+      APIServices().blockUnblockUser(RequestCheckFriendship(userid: userid.toString(),action_userid: widget.user.id.toString())).then((response) => {
+        responsemessage = response,
+        setState(() {
+          is_loading = false;
+        }),
+        Utility.showInSnackBar(responsemessage.message, _scaffold_key),
+      })
+    });
+  }
+
+  Future<Null> reportUser() async{
+    is_loading = true;
+    setState(() {
+    });
+    ResponseMessage responsemessage;
+    await FlutterSession().get(MyConstant.SESSION_ID).then((userid) => {
+      APIServices().reportUser(RequestReportUser(userid: userid.toString(),action_reportto : widget.user.id.toString())).then((response) => {
+        responsemessage = response,
+        setState(() {
+          is_loading = false;
+        }),
+        Utility.showInSnackBar(responsemessage.message, _scaffold_key),
+      })
+    });
   }
 
 
