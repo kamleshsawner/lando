@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lando/api/api_services.dart';
-import 'package:lando/model/request_model/request_forgot.dart';
 import 'package:lando/model/request_model/request_otp_verify.dart';
+import 'package:lando/model/response_model/response_forgotpassword.dart';
 import 'package:lando/model/response_model/response_message.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
@@ -13,6 +13,11 @@ import 'package:lando/views/widget/center_circle_indicator.dart';
 import 'package:lando/views/widget/gradient_button.dart';
 
 class ForgotOtpView extends StatefulWidget {
+
+  ResponseForgotPassword responseForgotPassword;
+
+  ForgotOtpView({this.responseForgotPassword});
+
   @override
   _ForgotOtpViewState createState() => _ForgotOtpViewState();
 }
@@ -41,8 +46,10 @@ class _ForgotOtpViewState extends State<ForgotOtpView> {
       setState(() {
         is_loading = true;
       });
+      request_otp.userid = widget.responseForgotPassword.userid.toString();
       responseMessage = await APIServices().otpVerifyPassword(request_otp);
       if(responseMessage.status==200){
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ForgotCreatePassView(userid: widget.responseForgotPassword.userid.toString(),)));
       }else{
         showerror(responseMessage.message);
       }
@@ -103,6 +110,13 @@ class _ForgotOtpViewState extends State<ForgotOtpView> {
                                       alignment: Alignment.topLeft,
                                       child: Text('Verify OTP',style: TextStyle(fontSize: 25,color: Colors.black,fontWeight: FontWeight.bold),),
                                     ),
+                                    SizedBox(height: 15,),
+/*
+                                    Container(
+                                      alignment: Alignment.topLeft,
+                                      child: Text('your OTP is : ${widget.responseForgotPassword.otp}',style: TextStyle(fontSize: 16,color: Colors.black,fontWeight: FontWeight.bold),),
+                                    ),
+*/
                                     Container(
                                       margin: EdgeInsets.fromLTRB( 20,50,20,20),
                                       child: TextFormField(
@@ -134,16 +148,11 @@ class _ForgotOtpViewState extends State<ForgotOtpView> {
                                             colors: <Color>[MyColors.COLOR_PRIMARY_LIGHT,MyColors.COLOR_PRIMARY_DARK]
                                         ),
                                         onPressed: (){
-                                          Navigator.push(context, MaterialPageRoute(
-                                              builder: (context) => ForgotCreatePassView()
-                                          ));
-/*
                                           Utility().checkInternetConnection().then((internet) => {
                                             if(internet){
                                               _submit(),
                                             }
                                           });
-*/
                                         },
                                       ),
                                     ),

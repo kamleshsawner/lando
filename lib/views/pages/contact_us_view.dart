@@ -40,8 +40,10 @@ class _ContactUsViewState extends State<ContactUsView> {
         is_loading = true;
       });
       var token = await FlutterSession().get(MyConstant.SESSION_ID);
-      responsemessage = await APIServices().contactUs(requestcontact,token);
+      responsemessage = await APIServices().contactUs(requestcontact);
       if(responsemessage.status==200){
+        Utility.showToast(responsemessage.message);
+        Navigator.pop(context);
       }else{
         showerror(responsemessage.message);
       }

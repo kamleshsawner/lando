@@ -5,6 +5,7 @@ import 'package:lando/api/api_services.dart';
 import 'package:lando/model/request_model/request_selectpackage.dart';
 import 'package:lando/model/response_model/response_message.dart';
 import 'package:lando/model/response_model/response_package.dart';
+import 'package:lando/paypal/paypal_payment_view.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
 import 'package:lando/util/utility.dart';
@@ -48,81 +49,109 @@ class _PackageViewState extends State<PackageView> {
   Widget build(BuildContext context) {
 
     var size = MediaQuery.of(context).size;
-    final double itemHeight = (size.height - kToolbarHeight) / 2.2;
+    // final double itemHeight = (size.height - kToolbarHeight) / 1.8;
+    final double itemHeight = 350;
     final double itemWidth = size.width / 2;
 
-    return Scaffold(
-      key: _scaffold_key,
-      appBar: AppBar(
-        toolbarHeight: 0,
-        backgroundColor: MyColors.COLOR_STATUS_BAR,
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [MyColors.COLOR_PRIMARY_DARK,MyColors.COLOR_PRIMARY_LIGHT],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter
-          )
+    return WillPopScope(
+      onWillPop: (){
+        Navigator.pushReplacement(context, MaterialPageRoute(
+            builder: (context) =>  HomeView()));
+      },
+      child: Scaffold(
+        key: _scaffold_key,
+        appBar: AppBar(
+          toolbarHeight: 0,
+          backgroundColor: MyColors.COLOR_STATUS_BAR,
         ),
-        child: Stack(
-          children: <Widget>[
-            Container(
-              height: 50,
-              padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
-              child: Row(
-                children: <Widget>[
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_ios,size: 30),
-                    color: Colors.white,
-                    onPressed: (){
-                      Navigator.pop(context);
-                    },
-                  ),
-                  Expanded(child: Center(child: Text('Package',style: TextStyle(color: Colors.white,fontSize: 20),))),
-                  SizedBox(width: 40,),
-                ],
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [MyColors.COLOR_PRIMARY_DARK,MyColors.COLOR_PRIMARY_LIGHT],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter
+            )
+          ),
+          child: Stack(
+            children: <Widget>[
+              Container(
+                height: 50,
+                padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
+                child: Row(
+                  children: <Widget>[
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios,size: 30),
+                      color: Colors.white,
+                      onPressed: (){
+                        Navigator.pushReplacement(context, MaterialPageRoute(
+                            builder: (context) =>  HomeView()));
+                      },
+                    ),
+                    Expanded(child: Center(child: Text('Packages',style: TextStyle(color: Colors.white,fontSize: 20),))),
+                    SizedBox(width: 40,),
+                  ],
+                ),
               ),
-            ),
-            is_loading ? CenterCircleIndicator() : Container(
-              margin: EdgeInsets.only(top: 55),
-              child: ListView(
-                children: <Widget>[
-                  Container(
-                    margin: EdgeInsets.only(left: 15, right: 15, bottom: 15),
-                    child: GridView.count(
-                        physics: ScrollPhysics(),
-                        shrinkWrap: true,
-                        crossAxisCount: 2,
-                        childAspectRatio: (itemWidth / itemHeight),
-                        children: List.generate(res_package.pack_list.length, (index) {
-                          return Center(
-                            child: PackageAdapterView(
-                                selected_venue:
-                                res_package.pack_list[index],
-                              onPressed: (){
-                                  submitData(res_package.pack_list[index]);
-                              },
-                            ),
-                          );
-                        })),
-                  )
-                ],
+              is_loading ? CenterCircleIndicator() : Container(
+                margin: EdgeInsets.only(top: 55),
+                child: ListView(
+                  children: <Widget>[
+                    Container(
+                      margin: EdgeInsets.only(left: 15, right: 15, bottom: 15),
+                      child: GridView.count(
+                          physics: ScrollPhysics(),
+                          shrinkWrap: true,
+                          crossAxisCount: 2,
+                          childAspectRatio: (itemWidth / itemHeight),
+                          children: List.generate(res_package.pack_list.length, (index) {
+                            return Center(
+                              child: PackageAdapterView(
+                                  selected_venue:
+                                  res_package.pack_list[index],
+                                onPressed: (){
+                                  if(index == 0){
+                                    // free
+                                    submitData(res_package.pack_list[index],'','');
+                                  }else{
+                                    // paid
+                                    print('price -'+res_package.pack_list[index].amount.toString());
+                                    Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) => PaypalPayment(
+                                      amount: res_package.pack_list[index].amount.toString(),
+                                      onFinish: (order_id,payerid) async {
+                                        // payment done
+                                        print('order id: '+order_id);
+                                        print('payer id: '+payerid);
+                                        submitData(res_package.pack_list[index],order_id,payerid);
+                                      },
+                                    ),
+                                    ),
+                                    );
+                                  }
+                                },
+                              ),
+                            );
+                          })),
+                    )
+                  ],
+                ),
               ),
-            ),
-            is_loading_select ? CenterCircleIndicator() : Text('')
-          ],
+              is_loading_select ? CenterCircleIndicator() : Text('')
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Future<Null> submitData(Package package) async{
+  Future<Null> submitData(Package package,String orderid,String payerid) async{
     is_loading_select = true;
     setState(() {
     });
     ResponseMessage responsemessage;
     await FlutterSession().get(MyConstant.SESSION_ID).then((userid) => {
-      APIServices().selectPackage(RequestSelectPackage(user_id: userid.toString(),package_id: package.id.toString())).then((dest_value) => {
+      APIServices().selectPackage(RequestSelectPackage(
+          user_id: userid.toString(),package_id: package.id.toString(),
+          amount: package.amount.toString(),payer_id: payerid,txn_id: orderid
+      )).then((dest_value) => {
         responsemessage = dest_value,
         setState(() {
           is_loading_select = false;
@@ -134,6 +163,8 @@ class _PackageViewState extends State<PackageView> {
       })
     });
   }
+
+
 }
 
 

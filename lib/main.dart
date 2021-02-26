@@ -9,7 +9,7 @@ import 'package:lando/views/pages/home_view.dart';
 void main() async{
 
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  // await Firebase.initializeApp();
 
   WidgetsFlutterBinding.ensureInitialized();
   dynamic user_id = await FlutterSession().get(MyConstant.SESSION_ID);

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_session/flutter_session.dart';
 import 'package:lando/model/response_model/response_destination_user.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:flutter/material.dart';
+import 'package:lando/util/myconstant.dart';
 import 'package:lando/util/utility.dart';
 import 'package:lando/views/pages/chat_view.dart';
 
@@ -20,8 +22,9 @@ class ReqUser{
   String name;
   String image;
   int status;
+  String firebase_chatid;
 
-  ReqUser({this.id,this.name,this.image,this.status});
+  ReqUser({this.id,this.name,this.image,this.status,this.firebase_chatid});
 
   factory ReqUser.fromjson(Map<String,dynamic> json){
     return ReqUser(
@@ -29,6 +32,7 @@ class ReqUser{
       name: json['name'],
       image : json['profile'],
       status : json['is_accept'],
+      firebase_chatid : json['firebase_chatid'],
     );
   }
 
@@ -38,6 +42,7 @@ class ReqUser{
       name: json['name'],
       image : json['profile'],
       status : 0,
+      firebase_chatid : json['firebase_chatid'],
     );
   }
 
@@ -76,7 +81,7 @@ class FirendRequestAdapterView extends StatelessWidget{
                 decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     image: DecorationImage(
-                        image: NetworkImage(selected_friend.image,),
+                        image: NetworkImage(Utility.getCompletePath(selected_friend.image),),
                         fit: BoxFit.fill)),
               ),
               SizedBox(width: 10,),
@@ -132,15 +137,17 @@ class FirendRequestAdapterView extends StatelessWidget{
 class FirendAdapterView extends StatelessWidget{
 
   final ReqUser selected_friend;
-  const FirendAdapterView({Key key, this.selected_friend}) : super(key: key);
+  final String loginuser_name;
+  const FirendAdapterView({Key key, this.selected_friend,this.loginuser_name}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
 
     return GestureDetector(
       onTap: (){
+        print('image -'+selected_friend.image);
         Navigator.push(context, MaterialPageRoute(
-            builder: (context) => ChatView(user: DestinationUser(name: selected_friend.name,image: selected_friend.image,id: selected_friend.id),)
+            builder: (context) => ChatView(reqUser: selected_friend,)
         ));
       },
       child: Container(

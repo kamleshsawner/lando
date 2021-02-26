@@ -4,11 +4,15 @@ import 'package:lando/api/api_services.dart';
 import 'package:lando/model/request_model/request_check_friendship.dart';
 import 'package:lando/model/request_model/request_destination_users.dart';
 import 'package:lando/model/response_model/response_destination_user.dart';
+import 'package:lando/model/response_model/response_friend_req_list.dart';
 import 'package:lando/model/response_model/response_message.dart';
+import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
 import 'package:lando/util/utility.dart';
 import 'package:lando/views/pages/chat_view.dart';
+import 'package:lando/views/pages/check_allprofile_view.dart';
+import 'package:lando/views/pages/home_view.dart';
 import 'package:lando/views/pages/send_request_view.dart';
 import 'package:lando/views/widget/center_circle_indicator.dart';
 
@@ -42,7 +46,8 @@ class _VenueUserViewState extends State<VenueUserView> {
 
   // get data
   Future<Null> getData() async {
-    await APIServices().getDestinationUsers(RequestDestinationUsers(group_id: widget.id)).then((destuser_res) => {
+    var userid = await FlutterSession().get(MyConstant.SESSION_ID);
+    await APIServices().getDestinationUsers(RequestDestinationUsers(group_id: widget.id),userid.toString()).then((destuser_res) => {
       responseDestinationUsers = destuser_res,
       setState(() {
         is_loading = false;
@@ -77,16 +82,13 @@ class _VenueUserViewState extends State<VenueUserView> {
                     icon: Icon(Icons.arrow_back_ios,size: 25),
                     color: Colors.white,
                     onPressed: (){
-                      Navigator.pop(context);
+                      Navigator.pushReplacement(context, MaterialPageRoute(
+                          builder: (context) => HomeView()
+                      ));
                     },
                   ),
                   Expanded(child: Center(child: Text(widget.name,style: TextStyle(color: Colors.white,fontSize: 16),))),
-                  IconButton(
-                    icon: Icon(Icons.search_rounded,size: 25),
-                    color: Colors.white,
-                    onPressed: (){
-                    },
-                  ),
+                  _simplePopup()
                 ],
               ),
             ),
@@ -116,6 +118,29 @@ class _VenueUserViewState extends State<VenueUserView> {
     );
   }
 
+  Widget _simplePopup() => PopupMenuButton<int>(
+    child: Container(
+      padding: EdgeInsets.fromLTRB(5, 10, 5, 10),
+      child: Image.asset(MyAssets.ASSET_ICON_CONTEXT_MENU),
+    ),
+    itemBuilder: (context) => [
+      PopupMenuItem(
+        value: 1,
+        child: Text("Check Profile"),
+      ),
+      PopupMenuItem(
+        value: 2,
+        child: Text("Cancel"),
+      ),
+    ],
+    onSelected: (value){
+      if(value == 1){
+        Navigator.push(context, MaterialPageRoute(
+            builder: (context) => CheckAllProfileView(id: widget.id,name: widget.name,)
+        ));
+      }
+    },
+  );
 
   Future<Null> submitData(DestinationUser user) async{
     is_loading_select = true;
@@ -128,17 +153,9 @@ class _VenueUserViewState extends State<VenueUserView> {
         setState(() {
           is_loading_select = false;
         }),
-        if(responsemessage.status == 0 || responsemessage.status == 1 || responsemessage.status == 3 ){
-          Utility.showToast(responsemessage.message),
           Navigator.push(context, MaterialPageRoute(
               builder: (context) => SendRequestView(user: user,status : responsemessage.status)
           )),
-        }else if(responsemessage.status == 2 ){
-          Utility.showToast(responsemessage.message),
-          Navigator.push(context, MaterialPageRoute(
-              builder: (context) => ChatView(user: user,)
-          )),
-        }
       })
     });
   }

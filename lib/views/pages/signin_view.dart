@@ -1,20 +1,29 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_session/flutter_session.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lando/api/api_services.dart';
+import 'package:lando/chat/auth.dart';
+import 'package:lando/chat/database.dart';
 import 'package:lando/model/request_model/request_login.dart';
+import 'package:lando/model/request_model/request_social_login.dart';
 import 'package:lando/model/response_model/response_login.dart';
+import 'package:lando/model/user.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
 import 'package:lando/util/utility.dart';
 import 'package:lando/views/pages/home_view.dart';
+import 'package:lando/views/pages/question_view.dart';
 import 'package:lando/views/pages/signin_option_view.dart';
 import 'package:lando/views/pages/signup_view.dart';
 import 'package:lando/views/widget/center_circle_indicator.dart';
 import 'package:lando/views/widget/gradient_button.dart';
+import 'package:flutter_facebook_login/flutter_facebook_login.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as JSON;
 
 import 'profile/forgot_view.dart';
 
@@ -25,6 +34,10 @@ class SigninView extends StatefulWidget {
 
 class _SigninViewState extends State<SigninView> {
 
+  static String EMAIL_TYPE  = 'email';
+  static String GOOGLE_TYPE  = 'google';
+  static String FACEBOOK_TYPE  = 'facebook';
+
   var _formkey = GlobalKey<FormState>();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   var is_loading = false;
@@ -34,6 +47,9 @@ class _SigninViewState extends State<SigninView> {
 
   // google login
   final googleSignIn = GoogleSignIn();
+
+  // facebook login
+  final facebookLogin = FacebookLogin();
 
 
   @override
@@ -53,7 +69,7 @@ class _SigninViewState extends State<SigninView> {
       });
       responseLogin = await APIServices().userLogin(requestLogin);
       if(responseLogin.status==200){
-        setData();
+        setData(responseLogin.status,EMAIL_TYPE);
       }else{
         showerror(responseLogin.message);
       }
@@ -61,55 +77,175 @@ class _SigninViewState extends State<SigninView> {
     _formkey.currentState.save();
   }
 
-  void setData() async{
-    var session = FlutterSession();
-    await session.set(MyConstant.SESSION_ID, responseLogin.user.id);
-    await session.set(MyConstant.SESSION_NAME, responseLogin.user.name);
-    await session.set(MyConstant.SESSION_EMAIL, responseLogin.user.email);
-    await session.set(MyConstant.SESSION_DOB, responseLogin.user.birth_date);
-    await session.set(MyConstant.SESSION_PHONE, responseLogin.user.mobile);
-    await session.set(MyConstant.SESSION_IMAGE, responseLogin.user.image);
-    await session.set(MyConstant.SESSION_IS_LOGIN, true);
-    setState(() {
-      is_loading =false;
-    });
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeView()));
+  // facebook login
+  _loginWithFB() async{
+
+    Map userProfile;
+    // final result = await facebookLogin.logInWithReadPermissions(['email']);
+    final result = await facebookLogin.logIn(['email']);
+    switch (result.status) {
+      case FacebookLoginStatus.loggedIn:
+        final token = result.accessToken.token;
+        final graphResponse = await http.get('https://graph.facebook.com/v2.12/me?fields=name,picture,email&access_token=${token}');
+        final profile = JSON.jsonDecode(graphResponse.body);
+        print(profile);
+        userProfile = profile;
+        var name = userProfile["name"];
+        var email = userProfile["email"];
+        var social_id = userProfile["id"].toString();
+        RequestSocialLogin requestSocialLogin = RequestSocialLogin(name: name,email: email,social_id: social_id,social_type: 'facebook');
+        print(requestSocialLogin.tojson().toString());
+        socialSubmit(requestSocialLogin,FACEBOOK_TYPE);
+        break;
+
+      case FacebookLoginStatus.cancelledByUser:
+        Utility.showToast('cancel by user');
+        setState(() => is_loading = false );
+        break;
+      case FacebookLoginStatus.error:
+        print('error - '+result.errorMessage);
+        Utility.showToast('error'+result.errorMessage);
+        setState(() => is_loading = false );
+        break;
+    }
+
   }
 
-  void setSocialloginData() async{
-    setState(() {
-      is_loading = true;
-    });
-    final user = FirebaseAuth.instance.currentUser;
-    var session = FlutterSession();
-    await session.set(MyConstant.SESSION_ID, user.uid);
-    await session.set(MyConstant.SESSION_NAME, user.displayName);
-    await session.set(MyConstant.SESSION_EMAIL, user.email);
-    await session.set(MyConstant.SESSION_IMAGE, user.photoURL);
-    await session.set(MyConstant.SESSION_IS_LOGIN, true);
-    setState(() {
-      is_loading =false;
-    });
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeView()));
-  }
-
-  Future googleLogin() async {
-    is_loading = true;
-    final user = await googleSignIn.signIn();
-    if (user == null) {
-      is_loading = false;
-      return;
-    } else {
-      final googleAuth = await user.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      await FirebaseAuth.instance.signInWithCredential(credential);
-      setSocialloginData();
+  // social submit
+  void socialSubmit(RequestSocialLogin requestSocialLogin,String type) async{
+    responseLogin = await APIServices().userSocialLogin(requestSocialLogin);
+    print('status - ${responseLogin.status}');
+    if(responseLogin.status==200 || responseLogin.status==201 ){
+      // 200 - new user
+      // 201 - old user
+      setData(responseLogin.status,type);
+    }else{
+      showerror(responseLogin.message);
     }
   }
 
+  void setData(int status,String type) async{
+
+    if(type == EMAIL_TYPE || type == GOOGLE_TYPE|| type == FACEBOOK_TYPE){
+      var session = FlutterSession();
+      print('user id  - ${responseLogin.user.id}');
+      await session.set(MyConstant.SESSION_ID, responseLogin.user.id);
+      await session.set(MyConstant.SESSION_FIREBASE_CHAT_ID, responseLogin.user.firebase_chatid);
+      await session.set(MyConstant.SESSION_NAME, responseLogin.user.name);
+      await session.set(MyConstant.SESSION_EMAIL, responseLogin.user.email);
+      await session.set(MyConstant.SESSION_DOB, responseLogin.user.birth_date);
+      await session.set(MyConstant.SESSION_PHONE, responseLogin.user.mobile);
+      await session.set(MyConstant.SESSION_IMAGE, responseLogin.user.image);
+      await session.set(MyConstant.SESSION_GENDER, responseLogin.user.gender);
+      await session.set(MyConstant.SESSION_IS_LOGIN, true);
+    }
+    if(status == 200 && type == EMAIL_TYPE){
+      firebaseLogin();
+    }else if(status == 200 && type == GOOGLE_TYPE ){
+      googleFirebaseSingUp(responseLogin.user);
+    }else if(status == 200 && type == FACEBOOK_TYPE ){
+      facebookFirebaseSingUp(responseLogin.user);
+    }else if(status == 201 && type == GOOGLE_TYPE){
+      setState(() {
+        is_loading =false;
+      });
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeView()));
+    }else if(status == 201 && type == FACEBOOK_TYPE){
+      firebaseLogin();
+    }
+  }
+
+  googleFirebaseSingUp(User user) async {
+
+    print('firebase sign up - '+user.email+' ,'+user.firebase_chatid);
+    setState(() {
+      is_loading =true;
+    });
+    AuthService authService = new AuthService();
+    DatabaseMethods databaseMethods = new DatabaseMethods();
+      Map<String,String> userDataMap = {
+        "userName" : user.firebase_chatid,
+        "userEmail" : user.email
+      };
+      print('user info - '+userDataMap.toString());
+      databaseMethods.addUserInfo(userDataMap);
+      setState(() {
+        is_loading =false;
+      });
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => QuestionsView()));
+  }
+
+
+  facebookFirebaseSingUp(User user) async {
+
+    print('firebase sign up - '+user.email+' ,'+user.firebase_chatid);
+    setState(() {
+      is_loading =true;
+    });
+    AuthService authService = new AuthService();
+    DatabaseMethods databaseMethods = new DatabaseMethods();
+    await authService.signUpWithEmailAndPassword(user.email,
+        user.email).then((result){
+      if(result != null){
+        Map<String,String> userDataMap = {
+          "userName" : user.firebase_chatid,
+          "userEmail" : user.email
+        };
+        print('user info - '+userDataMap.toString());
+        databaseMethods.addUserInfo(userDataMap);
+        setState(() {
+          is_loading =false;
+        });
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => QuestionsView()));
+      }
+    });
+  }
+
+  firebaseLogin() async {
+    setState(() {
+      is_loading =true;
+    });
+    AuthService authService = new AuthService();
+    DatabaseMethods databaseMethods = new DatabaseMethods();
+    await authService.signInWithEmailAndPassword(responseLogin.user.email,
+        responseLogin.user.email).then((result){
+      if(result != null){
+        setState(() {
+          is_loading =false;
+        });
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeView()));
+      }
+    });
+  }
+
+
+  Future googleLogin() async {
+    setState(() {
+      is_loading = true;
+    });
+    final user = await googleSignIn.signIn();
+    if (user == null) {
+      setState(() {
+        is_loading = false;
+      });
+      return;
+    } else {
+      final googleAuth = await user.authentication;
+      final credential = GoogleAuthProvider.getCredential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      AuthResult authResult = await FirebaseAuth.instance.signInWithCredential(credential);
+      authResult.user.email;
+      var social_id = user.id;
+      var type = 'Google';
+      var email = user.email;
+      var name = user.displayName;
+      RequestSocialLogin requestSocialLogin = RequestSocialLogin(name: name,email: email,social_id: social_id,social_type: type);
+      print(requestSocialLogin.tojson().toString());
+      socialSubmit(requestSocialLogin,GOOGLE_TYPE);
+    }
+  }
 
   void showerror(String message) {
     setState(() {
@@ -259,9 +395,14 @@ class _SigninViewState extends State<SigninView> {
                                           ),
                                         ),
                                         SizedBox(width: 50,),
-                                        Container(
-                                          padding: EdgeInsets.all(15),
-                                          child: Image.asset(MyAssets.ASSET_ICON_FACEBOOK,width: 40,height: 40,),
+                                        GestureDetector(
+                                          onTap: (){
+                                            // _loginWithFB();
+                                          },
+                                          child: Container(
+                                            padding: EdgeInsets.all(15),
+                                            child: Image.asset(MyAssets.ASSET_ICON_FACEBOOK,width: 40,height: 40,),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -272,7 +413,7 @@ class _SigninViewState extends State<SigninView> {
                                         SizedBox(width: 10,),
                                         GestureDetector(
                                             onTap: (){
-                                              Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpView()));
+                                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignUpView()));
                                             },
                                             child: Text("Create Your Account",style: TextStyle(color: MyColors.COLOR_PRIMARY_DARK,fontSize: 14),)),
                                       ],

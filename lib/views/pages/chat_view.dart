@@ -1,22 +1,26 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_session/flutter_session.dart';
 import 'package:lando/api/api_services.dart';
+import 'package:lando/chat/database.dart';
 import 'package:lando/model/request_model/request_check_friendship.dart';
 import 'package:lando/model/request_model/request_user_report.dart';
 import 'package:lando/model/response_model/response_destination_user.dart';
+import 'package:lando/model/response_model/response_friend_req_list.dart';
 import 'package:lando/model/response_model/response_message.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
 import 'package:lando/util/utility.dart';
 import 'package:lando/views/pages/send_request_view.dart';
+import 'package:lando/views/widget/app_widgets.dart';
 import 'package:lando/views/widget/center_circle_indicator.dart';
 
 class ChatView extends StatefulWidget {
 
-  DestinationUser user;
+  ReqUser reqUser;
 
-  ChatView({this.user});
+  ChatView({this.reqUser});
 
   @override
   _ChatViewState createState() => _ChatViewState();
@@ -26,6 +30,62 @@ class _ChatViewState extends State<ChatView> {
 
   var _scaffold_key = GlobalKey<ScaffoldState>();
   var is_loading = false;
+
+  var mychat_id = '';
+
+  // chat
+  Stream<QuerySnapshot> chats;
+  TextEditingController messageEditingController = new TextEditingController();
+
+    String getChatRoomId(String a, String b) {
+    if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
+      return "$b\_$a";
+    } else {
+      return "$a\_$b";
+    }
+  }
+
+
+  Widget chatMessages(){
+    return StreamBuilder(
+      stream: chats,
+      builder: (context, snapshot){
+        return snapshot.hasData ?  ListView.builder(
+          itemCount: snapshot.data.documents.length,
+            itemBuilder: (context, index){
+              return MessageTile(
+                message: snapshot.data.documents[index].data["message"],
+                sendByMe: mychat_id == snapshot.data.documents[index].data["sendBy"],
+              );
+            }) : Container();
+      },
+    );
+  }
+
+  addMessage() {
+    if (messageEditingController.text.isNotEmpty) {
+      Map<String, dynamic> chatMessageMap = {
+        "sendBy": mychat_id,
+        "message": messageEditingController.text,
+        'time': DateTime
+            .now()
+            .millisecondsSinceEpoch,
+      };
+      print(chatMessageMap.toString());
+      print('my chat id - '+mychat_id);
+      DatabaseMethods().addMessage(getChatRoomId(widget.reqUser.firebase_chatid, mychat_id), chatMessageMap);
+
+      setState(() {
+        messageEditingController.text = "";
+      });
+    }
+  }
+
+  @override
+  void initState(){
+      getData();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +125,7 @@ class _ChatViewState extends State<ChatView> {
                     child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: FadeInImage(
-                          image: NetworkImage(Utility.getCompletePath(widget.user.image)),
+                          image: NetworkImage(Utility.getCompletePath(widget.reqUser.image)),
                           placeholder: AssetImage(MyAssets.ASSET_IMAGE_LIST_DUMMY_PROFILE),
                           height: 45,
                           width:45,
@@ -75,7 +135,12 @@ class _ChatViewState extends State<ChatView> {
                   Expanded(child: GestureDetector(
                     onTap: (){
                       Navigator.push(context, MaterialPageRoute(
-                          builder: (context) => SendRequestView()
+                          builder: (context) => SendRequestView(user: DestinationUser(
+                            firebase_chatid: widget.reqUser.firebase_chatid,
+                            image: widget.reqUser.image,
+                            name: widget.reqUser.name,
+                            id: widget.reqUser.id
+                          ),status : 4)
                       ));
                     },
                     child: Container(
@@ -84,7 +149,7 @@ class _ChatViewState extends State<ChatView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          Text(widget.user.name,style: TextStyle(color: Colors.white,fontSize: 18),),
+                          Text(widget.reqUser.name,style: TextStyle(color: Colors.white,fontSize: 18),),
                         ],
                       ),
                     ),
@@ -103,6 +168,52 @@ class _ChatViewState extends State<ChatView> {
               height: 1,
               color: Colors.white,
               margin: EdgeInsets.only(top: 55),
+            ),
+            Container(
+              margin: EdgeInsets.fromLTRB(0, 60, 0, 60),
+              child: chatMessages(),
+            ),
+            Container(alignment: Alignment.bottomCenter,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                color: Color(0x54FFFFFF),
+                child: Row(
+                  children: [
+                    Expanded(
+                        child: TextField(
+                          controller: messageEditingController,
+                          style: simpleTextStyle(),
+                          decoration: InputDecoration(
+                              hintText: "Write a message ...",
+                              hintStyle: TextStyle(
+                                color: Colors.black54,
+                                fontSize: 16,
+                              ),
+                              border: InputBorder.none
+                          ),
+                        )),
+                    SizedBox(width: 16,),
+                    GestureDetector(
+                      onTap: () {
+                        addMessage();
+                      },
+                      child: Container(
+                          height: 50,
+                          width: 50,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(40)
+                          ),
+                          padding: EdgeInsets.all(12),
+                          child: Icon(Icons.send,size: 25,color: Colors.red,)),
+                    ),
+                  ],
+                ),
+              ),
             ),
             is_loading ? CenterCircleIndicator() : Text('')
           ],
@@ -131,10 +242,12 @@ class _ChatViewState extends State<ChatView> {
                       SizedBox(height: 15,),
                       Container(
                           padding: EdgeInsets.all(12),
-                          child: Center(child: Text('Select Option',style: TextStyle(color: Colors.black,fontSize: 16),),)),
+                          child: Center(child: Text('Select Option',style: TextStyle(color: Colors.black,fontSize: 18,fontWeight: FontWeight.bold),),)),
+/*
                       Container(
                           padding: EdgeInsets.all(12),
                           child: Center(child: Text('Clear All Chat',style: TextStyle(color: Colors.black,fontSize: 16),),)),
+*/
                       GestureDetector(
                         onTap: (){
                           Navigator.pop(context);
@@ -186,7 +299,7 @@ class _ChatViewState extends State<ChatView> {
     });
     ResponseMessage responsemessage;
     await FlutterSession().get(MyConstant.SESSION_ID).then((userid) => {
-      APIServices().blockUnblockUser(RequestCheckFriendship(userid: userid.toString(),action_userid: widget.user.id.toString())).then((response) => {
+      APIServices().blockUnblockUser(RequestCheckFriendship(userid: userid.toString(),action_userid: widget.reqUser.id.toString())).then((response) => {
         responsemessage = response,
         setState(() {
           is_loading = false;
@@ -202,7 +315,7 @@ class _ChatViewState extends State<ChatView> {
     });
     ResponseMessage responsemessage;
     await FlutterSession().get(MyConstant.SESSION_ID).then((userid) => {
-      APIServices().reportUser(RequestReportUser(userid: userid.toString(),action_reportto : widget.user.id.toString())).then((response) => {
+      APIServices().reportUser(RequestReportUser(userid: userid.toString(),action_reportto : widget.reqUser.id.toString())).then((response) => {
         responsemessage = response,
         setState(() {
           is_loading = false;
@@ -212,5 +325,70 @@ class _ChatViewState extends State<ChatView> {
     });
   }
 
+  void getData() async{
+    mychat_id = await FlutterSession().get(MyConstant.SESSION_FIREBASE_CHAT_ID);
+    await FlutterSession().get(MyConstant.SESSION_FIREBASE_CHAT_ID).then((value) {
+      DatabaseMethods().getChats(getChatRoomId(widget.reqUser.firebase_chatid, mychat_id)).then((val) {
+        setState(() {
+          chats = val;
+        });
+      });
+    });
+  }
+}
 
+
+class MessageTile extends StatelessWidget {
+  final String message;
+  final bool sendByMe;
+
+  MessageTile({@required this.message, @required this.sendByMe});
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+          top: 8,
+          bottom: 8,
+          left: sendByMe ? 0 : 24,
+          right: sendByMe ? 24 : 0),
+      alignment: sendByMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: sendByMe
+            ? EdgeInsets.only(left: 30)
+            : EdgeInsets.only(right: 30),
+        padding: EdgeInsets.only(
+            top: 17, bottom: 17, left: 20, right: 20),
+        decoration: BoxDecoration(
+            borderRadius: sendByMe ? BorderRadius.only(
+                topLeft: Radius.circular(23),
+                topRight: Radius.circular(23),
+                bottomLeft: Radius.circular(23)
+            ) :
+            BorderRadius.only(
+        topLeft: Radius.circular(23),
+          topRight: Radius.circular(23),
+          bottomRight: Radius.circular(23)),
+            gradient: LinearGradient(
+              colors: sendByMe ? [
+                const Color(0xFFf55505),
+                const Color(0xFFf55505)
+              ]
+                  : [
+                const Color(0xFFcfcdcc),
+                const Color(0xFFcfcdcc)
+              ],
+            )
+        ),
+        child: Text(message,
+            textAlign: TextAlign.start,
+            style: TextStyle(
+            color: sendByMe ? Colors.white : Colors.black,
+            fontSize: 16,
+            fontFamily: 'OverpassRegular',
+            fontWeight: FontWeight.w300)),
+      ),
+    );
+  }
 }

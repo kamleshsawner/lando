@@ -14,7 +14,6 @@ class MyAssets{
 
   // dummy
   static const ASSET_IMAGE_DUMMY_HOME = 'assets/images/dummy_home.png';
-  static const ASSET_IMAGE_DUMMY_PROFILE = 'assets/images/dummy_profile.jpeg';
   static const ASSET_IMAGE_LIST_DUMMY_PROFILE = 'assets/images/list_dummy.png';
 
 }

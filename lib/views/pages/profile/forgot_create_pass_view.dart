@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lando/api/api_services.dart';
 import 'package:lando/model/request_model/request_create_password.dart';
-import 'package:lando/model/request_model/request_forgot.dart';
 import 'package:lando/model/response_model/response_message.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
@@ -12,6 +11,11 @@ import 'package:lando/views/widget/center_circle_indicator.dart';
 import 'package:lando/views/widget/gradient_button.dart';
 
 class ForgotCreatePassView extends StatefulWidget {
+
+  String userid;
+
+  ForgotCreatePassView({this.userid});
+
   @override
   _ForgotCreatePassViewState createState() => _ForgotCreatePassViewState();
 }
@@ -39,8 +43,11 @@ class _ForgotCreatePassViewState extends State<ForgotCreatePassView> {
       setState(() {
         is_loading = true;
       });
+      requestCreatepassword.userid = widget.userid;
       responseMessage = await APIServices().createPassword(requestCreatepassword);
       if (responseMessage.status == 200) {
+        Utility.showToast(responseMessage.message);
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SigninView()));
       } else {
         showerror(responseMessage.message);
       }
@@ -59,8 +66,7 @@ class _ForgotCreatePassViewState extends State<ForgotCreatePassView> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => SigninView()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SigninView()));
       },
       child: Scaffold(
         key: _scaffoldKey,

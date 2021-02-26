@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "763181616018",
+    "project_id": "lando-4d9ad",
+    "storage_bucket": "lando-4d9ad.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:763181616018:android:4019288d646bc5d9f88f4b",
+        "android_client_info": {
+          "package_name": "com.riteserve.lando"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "763181616018-vnostpd0eck0plo10nvch5tcivs7rnfa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.riteserve.lando",
+            "certificate_hash": "0b75cf208fcaf6179b8e4be84cb03492dac6ca62"
+          }
+        },
+        {
+          "client_id": "763181616018-qtgv2ehugtsl2uipuafa0qvvlrm724id.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9jfF0e189gQqmmx7Dz-KuqAsN9c6JDZM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "763181616018-qtgv2ehugtsl2uipuafa0qvvlrm724id.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "763181616018-b6km6qu99hp7m7b4m4londrq660kc73i.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.riteserve.lando"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

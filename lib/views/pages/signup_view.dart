@@ -1,9 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:flutter_session/flutter_session.dart';
 import 'package:lando/api/api_services.dart';
+import 'package:lando/chat/auth.dart';
+import 'package:lando/chat/database.dart';
 import 'package:lando/model/request_model/request_signup.dart';
 import 'package:lando/model/response_model/response_login.dart';
+import 'package:lando/model/user.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
@@ -28,6 +32,11 @@ class _SignUpViewState extends State<SignUpView> {
   RequestSignup requestSignup;
   ResponseLogin responseLogin;
 
+  String _date = "Select Date of Birth";
+
+  List gender=["Male","Female","Other"];
+  String select;
+
 
   @override
   void initState() {
@@ -38,7 +47,10 @@ class _SignUpViewState extends State<SignUpView> {
   // submit
   void _submit() async{
     final isValid = _formkey.currentState.validate();
-    if (!isValid) {
+
+    if(!myValidtion()){
+      return;
+    }else if (!isValid) {
       return;
     } else {
       setState(() {
@@ -57,17 +69,49 @@ class _SignUpViewState extends State<SignUpView> {
   void setData() async{
     var session = FlutterSession();
     await session.set(MyConstant.SESSION_ID, responseLogin.user.id);
+    await session.set(MyConstant.SESSION_FIREBASE_CHAT_ID, responseLogin.user.firebase_chatid);
     await session.set(MyConstant.SESSION_NAME, responseLogin.user.name);
     await session.set(MyConstant.SESSION_EMAIL, responseLogin.user.email);
     await session.set(MyConstant.SESSION_DOB, responseLogin.user.birth_date);
     await session.set(MyConstant.SESSION_PHONE, responseLogin.user.mobile);
     await session.set(MyConstant.SESSION_IMAGE, responseLogin.user.image);
+    await session.set(MyConstant.SESSION_GENDER, responseLogin.user.gender);
     await session.set(MyConstant.SESSION_IS_LOGIN, true);
-    setState(() {
-      is_loading =false;
-    });
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => QuestionsView()));
+
+    firebasesingUp();
+
+    // setState(() {
+    //   is_loading =false;
+    // });
+    // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => QuestionsView()));
+
   }
+
+
+    firebasesingUp() async {
+    setState(() {
+      is_loading =true;
+    });
+    AuthService authService = new AuthService();
+    DatabaseMethods databaseMethods = new DatabaseMethods();
+    await authService.signUpWithEmailAndPassword(requestSignup.email,
+        requestSignup.email).then((result){
+            if(result != null){
+              Map<String,String> userDataMap = {
+                "userName" : responseLogin.user.firebase_chatid,
+                "userEmail" : requestSignup.email
+              };
+              print('user info - '+userDataMap.toString());
+              databaseMethods.addUserInfo(userDataMap);
+              setState(() {
+                  is_loading =false;
+              });
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => QuestionsView()));
+            }
+      });
+  }
+
+
 
   void showerror(String message) {
     setState(() {
@@ -121,7 +165,8 @@ class _SignUpViewState extends State<SignUpView> {
                                       margin: EdgeInsets.fromLTRB(0, 15, 0, 0),
                                       alignment: Alignment.topLeft,
                                       child: Text('Welcome',style: TextStyle(fontSize: 16,color: Colors.black),),
-                                    ),Container(
+                                    ),
+                                    Container(
                                       alignment: Alignment.topLeft,
                                       child: Text('Lando',style: TextStyle(fontSize: 30,color: MyColors.COLOR_PRIMARY_DARK,fontWeight: FontWeight.bold),),
                                     ),
@@ -211,6 +256,101 @@ class _SignUpViewState extends State<SignUpView> {
                                       ),
                                     ),
                                     Container(
+                                      alignment: Alignment.topLeft,
+                                      margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                                      child: Text('Date Of Birth',style: TextStyle(
+                                          fontSize: 16,color: Colors.black
+                                      ),),
+                                    ),
+                                    Container(
+                                      child: Column(
+                                        children: <Widget>[
+                                          SizedBox(
+                                            child: FlatButton(
+                                              onPressed: () {
+                                                DatePicker.showDatePicker(context,
+                                                    theme: DatePickerTheme(
+                                                      containerHeight: 210.0,
+                                                    ),
+                                                    showTitleActions: true,
+                                                    minTime: DateTime(1900, 1, 1),
+                                                    maxTime: new DateTime(2000,12,31)
+                                                    , onConfirm: (date) {
+                                                      print('confirm $date');
+                                                      _date = '${date.day}-${date.month}-${date.year}';
+                                                      setState(() {});
+                                                    }, currentTime: DateTime.now(), locale: LocaleType.en);
+                                              },
+                                              child: Container(
+                                                alignment: Alignment.center,
+                                                height: 50.0,
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: <Widget>[
+                                                    Row(
+                                                      children: <Widget>[
+                                                        Container(
+                                                          child: Row(
+                                                            children: <Widget>[
+                                                              Text(
+                                                                "  $_date",
+                                                                style: TextStyle(
+                                                                    color: Colors.black,
+                                                                    fontSize: 16.0,
+                                                                    fontStyle: FontStyle.normal),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        )
+                                                      ],
+                                                    ),
+                                                    Icon(Icons.date_range,color: Colors.black45,)
+
+                                                  ],
+                                                ),
+                                              ),
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          // datetime()
+                                        ],
+                                      ),
+                                    ),
+                                    // GestureDetector(
+                                    //   onTap: (){
+                                    //     _getdobDate();
+                                    //   },
+                                    //   child: Container(
+                                    //     margin: EdgeInsets.fromLTRB(0, 30, 0, 10),
+                                    //     alignment: Alignment.topLeft,
+                                    //     child: dateofbirth == null ? Text(
+                                    //       'Select Date of Birth',style: TextStyle(color: Colors.grey,fontSize: 16),
+                                    //     ) : Text(
+                                    //       Utility.getFormatedDate(dateofbirth),style: TextStyle(color: Colors.black,fontSize: 16),
+                                    //     ),
+                                    //   ),
+                                    // ),
+                                    Container(
+                                      color: Colors.grey,
+                                      height: 1,
+                                    ),
+                                    Container(
+                                      alignment: Alignment.topLeft,
+                                      margin: EdgeInsets.fromLTRB(0, 20, 0, 10),
+                                      child: Text('Select Gender',style: TextStyle(
+                                        fontSize: 16,color: Colors.black
+                                      ),),
+                                    ),
+                                    Container(
+                                      child: Row(
+                                        children: <Widget>[
+                                          addRadioButton(0, 'Male'),
+                                          addRadioButton(1, 'Female'),
+                                          addRadioButton(2, 'Others'),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
                                       margin: EdgeInsets.fromLTRB(20,40,20,30),
                                       child: MyGradientButton(
                                         height: 45,
@@ -261,5 +401,40 @@ class _SignUpViewState extends State<SignUpView> {
         ),
       ),
     );
+  }
+
+  Row addRadioButton(int btnValue, String title) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        Radio(
+          activeColor: Theme.of(context).primaryColor,
+          value: gender[btnValue],
+          groupValue: select,
+          onChanged: (value){
+            setState(() {
+              print(value);
+              select=value;
+            });
+          },
+        ),
+        Text(title)
+      ],
+    );
+  }
+
+  bool myValidtion() {
+    if(_date == 'Select Date of Birth'){
+      Utility.showInSnackBar('Please select Date of Birth', _scaffoldKey);
+      return false;
+    }else if(select == null){
+      Utility.showInSnackBar('Please select Gender', _scaffoldKey);
+      return false;
+    }else{
+      requestSignup.dob = _date;
+      requestSignup.gender = select;
+      print(requestSignup.tojson());
+      return true;
+    }
   }
 }

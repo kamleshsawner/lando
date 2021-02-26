@@ -1,12 +1,12 @@
 
 class RequestForgot{
 
-  String mobile;
+  String email;
 
-  RequestForgot({this.mobile});
+  RequestForgot({this.email});
 
   Map<String,dynamic> tojson() => {
-    'mobile':this.mobile,
+    'email':this.email,
   };
 
 }

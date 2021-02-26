@@ -13,4 +13,8 @@ class RequestToken{
     'userid':this.user_id,
   };
 
+  Map<String,dynamic> tojson_user_id() => {
+    'user_id':this.user_id,
+  };
+
 }

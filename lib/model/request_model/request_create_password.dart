@@ -8,8 +8,8 @@ class RequestCreatePassword{
   RequestCreatePassword({this.userid,this.password,this.conf_password});
 
   Map<String,dynamic> tojson() => {
-    'userid':this.userid,
-    'newpassword':this.password,
+    'user_id':this.userid,
+    'password':this.password,
   };
 
 }

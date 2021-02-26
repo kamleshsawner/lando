@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lando/api/api_services.dart';
 import 'package:lando/model/request_model/request_forgot.dart';
+import 'package:lando/model/response_model/response_forgotpassword.dart';
 import 'package:lando/model/response_model/response_message.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
@@ -23,8 +24,7 @@ class _ForgotViewState extends State<ForgotView> {
   var is_loading = false;
 
   RequestForgot requestForgot;
-  ResponseMessage responseMessage;
-
+  ResponseForgotPassword responseForgotPassword;
 
   @override
   void initState() {
@@ -41,10 +41,11 @@ class _ForgotViewState extends State<ForgotView> {
       setState(() {
         is_loading = true;
       });
-      responseMessage = await APIServices().getPassword(requestForgot);
-      if(responseMessage.status==200){
+      responseForgotPassword = await APIServices().userForgotPassword(requestForgot);
+      if(responseForgotPassword.status==200){
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ForgotOtpView(responseForgotPassword: responseForgotPassword,)));
       }else{
-        showerror(responseMessage.message);
+        showerror(responseForgotPassword.message);
       }
     }
     _formkey.currentState.save();
@@ -106,16 +107,20 @@ class _ForgotViewState extends State<ForgotView> {
                                     Container(
                                       margin: EdgeInsets.fromLTRB( 20,50,20,20),
                                       child: TextFormField(
-                                        keyboardType: TextInputType.phone,
-                                        validator: (mobile){
-                                          requestForgot.mobile = mobile;
-                                          if(mobile.isEmpty){
-                                            return 'Enter Mobile Number';
+                                        validator: (email) {
+                                          requestForgot.email = email;
+                                          bool emailValid = RegExp(
+                                              r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                                              .hasMatch(email);
+                                          if (email.isEmpty) {
+                                            return 'Enter Email Address';
+                                          } else if (!emailValid) {
+                                            return 'Invalid Email Address';
                                           }
                                           return null;
                                         },
                                         decoration: InputDecoration(
-                                          hintText: 'Enter Your Phone Number',
+                                          hintText: 'Enter Your Email ',
                                         ),
                                       ),
                                     ),
@@ -133,16 +138,11 @@ class _ForgotViewState extends State<ForgotView> {
                                             colors: <Color>[MyColors.COLOR_PRIMARY_LIGHT,MyColors.COLOR_PRIMARY_DARK]
                                         ),
                                         onPressed: (){
-                                          Navigator.push(context, MaterialPageRoute(
-                                              builder: (context) => ForgotOtpView()
-                                          ));
-/*
                                           Utility().checkInternetConnection().then((internet) => {
                                             if(internet){
                                               _submit(),
                                             }
                                           });
-*/
                                         },
                                       ),
                                     ),

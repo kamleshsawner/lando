@@ -27,6 +27,7 @@ class _QuestionsViewState extends State<QuestionsView> {
 
   SwiperController _controller = SwiperController();
   var list = List<Question>();
+  int my_index = 0;
 
   @override
   void initState() {
@@ -55,9 +56,7 @@ class _QuestionsViewState extends State<QuestionsView> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: (){
-        Navigator.pushReplacement(context, MaterialPageRoute(
-            builder: (context) => HomeView()
-        ));
+        _removeQuestion();
       },
       child: Scaffold(
         key: _scaffold_key,
@@ -84,9 +83,7 @@ class _QuestionsViewState extends State<QuestionsView> {
                       icon: Icon(Icons.arrow_back_ios,size: 25),
                       color: Colors.white,
                       onPressed: (){
-                        Navigator.pushReplacement(context, MaterialPageRoute(
-                            builder: (context) => HomeView()
-                        ));
+                        _removeQuestion();
                       },
                     ),
                     Expanded(child: Text('')),
@@ -151,6 +148,17 @@ class _QuestionsViewState extends State<QuestionsView> {
                           },
                         ),
                       ),
+                      Container(
+                          alignment: Alignment.bottomRight,
+                          margin: EdgeInsets.all(20),
+                          child: MyGradientButton(
+                            child: Text('Skip',style: TextStyle(fontSize: 18,color: Colors.white,fontWeight: FontWeight.w400),),
+                            gradient: LinearGradient(colors: [MyColors.COLOR_PRIMARY_LIGHT,MyColors.COLOR_PRIMARY_DARK,]),
+                            height: 45,
+                            onPressed: (){
+                              _removeQuestion();
+                            },
+                          ))
                     ],
                   ),
                 ),
@@ -163,7 +171,6 @@ class _QuestionsViewState extends State<QuestionsView> {
   }
 
   void _submitAnswer(int index,int ques_id) async{
-
     var answer = ans_controller.text.toString();
     if(answer == ''){
       Utility.showToast('Please enter your answer');
@@ -178,9 +185,10 @@ class _QuestionsViewState extends State<QuestionsView> {
       showMessage(responsemessage.message);
 
       if(list.length == 1){
-        Navigator.push(context, MaterialPageRoute(builder: (context) => PackageView() ));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PackageView() ));
       }else{
         list.removeAt(index);
+        my_index = ++my_index;
         setState(() {
         });
       }
@@ -193,6 +201,14 @@ class _QuestionsViewState extends State<QuestionsView> {
       is_loading = false;
       Utility.showInSnackBar(message, _scaffold_key);
     });
+  }
+
+  void _removeQuestion() {
+    if(my_index == 3 || my_index > 3){
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PackageView() ));
+    }else{
+      Utility.showInSnackBar('Please Submit atleast 3 Answer.', _scaffold_key);
+    }
   }
 
 

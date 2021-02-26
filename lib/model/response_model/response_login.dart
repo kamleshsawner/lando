@@ -11,7 +11,7 @@ class ResponseLogin{
   ResponseLogin({this.status,this.message,this.user});
 
   factory ResponseLogin.fromjson(Map<String,dynamic> json,int status){
-    if(status == 200){
+    if(status == 200 || status == 201){
       return ResponseLogin(
           status: status,
           message: json['message'],

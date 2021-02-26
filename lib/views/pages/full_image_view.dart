@@ -1,9 +1,18 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_swiper/flutter_swiper.dart';
+import 'package:lando/model/response_model/response_myprofile.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
+import 'package:lando/util/utility.dart';
 
 class FullImageView extends StatefulWidget {
+
+  List<Gallery> gallery_list;
+  int img_index;
+
+  FullImageView({this.gallery_list, this.img_index});
+
   @override
   _FullImageViewState createState() => _FullImageViewState();
 }
@@ -39,62 +48,30 @@ class _FullImageViewState extends State<FullImageView> {
                   Expanded(
                       child: Center(
                           child: Text(
-                    'Lando',
+                    'Lando Profile',
                     style: TextStyle(color: Colors.black, fontSize: 18),
                   ))),
-                  Text('1/10',style: TextStyle(color: MyColors.COLOR_PRIMARY_DARK,fontSize: 18),)
+                  SizedBox(width: 50,)
+                  // Text('1/10',style: TextStyle(color: MyColors.COLOR_PRIMARY_DARK,fontSize: 18),)
                 ],
               ),
             ),
             Container(
-              width: MediaQuery.of(context).size.width,
-              margin: EdgeInsets.only(top: 65,bottom: 10,left: 10,right: 10),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(25),
-                child: Image.asset(
-                  MyAssets.ASSET_IMAGE_SPLASH,
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-            Container(
-              width: MediaQuery.of(context).size.width,
-              margin: EdgeInsets.only(top: 65,bottom: 10,left: 10,right: 10),
-              child: Column(
-                children: <Widget>[
-                  Expanded(child: Text('')),
-                  Container(
+              margin: EdgeInsets.fromLTRB(10, 60, 10, 10),
+              child:  Swiper(
+                // pagination: new SwiperPagination(),
+                itemCount: widget.gallery_list.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Container(
                     alignment: Alignment.center,
-                    child: Text('Sara , 23',style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 23),),
-                  ),
-                  Container(
-                    margin: EdgeInsets.all(20),
-                    child: Row(
-                      children: <Widget>[
-                        Expanded(child: Text('')),
-                        Container(
-                          margin: EdgeInsets.only(left: 15,right: 15),
-                          width: 70,height: 70,
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(35),color: Colors.white),
-                          child: Icon(Icons.cancel,size: 40,color: Colors.red,),
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(left: 15,right: 15),
-                          width: 70,height: 70,
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(35),color: Colors.white),
-                          child: Icon(Icons.chat,size:40,color: Colors.black,),
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(left: 15,right: 15),
-                          width: 70,height: 70,
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(35),color: Colors.white),
-                          child: Icon(Icons.favorite,size: 40,color: Colors.red,),
-                        ),
-                        Expanded(child: Text('')),
-                      ],
-                    ),
-                  )
-                ],
+                    child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: FadeInImage(
+                          image: NetworkImage(Utility.getCompletePath(widget.gallery_list[index].image)),
+                          placeholder: AssetImage(MyAssets.ASSET_IMAGE_LOGO),
+                        )
+                    ),);
+                },
               ),
             )
           ],

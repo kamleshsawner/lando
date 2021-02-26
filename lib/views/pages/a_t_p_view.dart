@@ -59,20 +59,11 @@ class _ATPViewState extends State<ATPView> {
               ),
               Container(
                 margin: EdgeInsets.fromLTRB(10,60,10,10),
-                child: Center(
-                  child: Column(
-                    children: <Widget>[
-                      SingleChildScrollView(
-                        child: Container(
-                          padding: EdgeInsets.all(20),
-                          child: Text(widget.cotent,
-                            textAlign: TextAlign.justify,
-                            textDirection: TextDirection.ltr,
-                            style: TextStyle(color: Colors.white,fontSize: 18),
-                          ),
-                        ),
-                      )
-                    ],
+                child: SingleChildScrollView(
+                  child: Text(widget.cotent,
+                    textAlign: TextAlign.justify,
+                    textDirection: TextDirection.ltr,
+                    style: TextStyle(color: Colors.white,fontSize: 16),
                   ),
                 ),
               )

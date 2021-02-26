@@ -67,11 +67,11 @@ class Package{
   }
 
   String getLike(int like){
-    return like == 0 ? '* Unlimited Like' : '* $like Likes';
+    return like == 0 ? '* Unlimited Like' : '* Limited Likes';
   }
 
   String getSendRequest(int request){
-    return request == 0 ? '* Unlimited Send Request' : '* $request send request';
+    return request == 0 ? '* Unlimited Send Request' : '* Limited send request';
   }
 
 }

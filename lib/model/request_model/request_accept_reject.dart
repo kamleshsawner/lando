@@ -11,4 +11,10 @@ class RequestAcceptReject{
     'id':this.id,
   };
 
+
+  Map<String,dynamic> tojsondummy() => {
+    'status':this.status,
+    'id':this.id,
+  };
+
 }

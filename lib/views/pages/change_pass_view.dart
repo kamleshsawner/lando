@@ -40,7 +40,12 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
       var user_id = await FlutterSession().get(MyConstant.SESSION_ID);
       requestchangepass.user_id = user_id.toString();
       responsemessage = await APIServices().changePassword(requestchangepass);
-      showerror(responsemessage.message);
+      if(responsemessage.status == 200){
+        Utility.showToast(responsemessage.message);
+        Navigator.pop(context);
+      }else{
+        showerror(responsemessage.message);
+      }
     }
     _formkey.currentState.save();
   }

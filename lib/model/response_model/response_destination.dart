@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lando/api/api_services.dart';
 import 'package:lando/util/myassets.dart';
 
 class ResponseDestination{
@@ -15,14 +16,16 @@ class Destination{
   int id;
   String title;
   String image;
+  int status;
 
-  Destination({this.id,this.title,this.image});
+  Destination({this.id,this.title,this.image,this.status});
 
   factory Destination.fromjson(Map<String,dynamic> json){
     return Destination(
       id: json['id'],
       title: json['title'],
-      image : 'https://lando.wrappex.com/storage/'+json['group_image'],
+      image : APIServices.BASE_PROFILE_IMAGE_URL+json['group_image'],
+      status: json['is_joined'],
     );
   }
 

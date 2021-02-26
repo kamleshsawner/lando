@@ -8,9 +8,9 @@ class RequestContactUs{
   RequestContactUs({this.email,this.name,this.message});
 
   Map<String,dynamic> tojson() => {
-    'a':this.name,
-    'b':this.email,
-    'c':this.message,
+    'name':this.name,
+    'email':this.email,
+    'message':this.message,
   };
 
 }
