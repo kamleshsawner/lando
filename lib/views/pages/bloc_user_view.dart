@@ -100,7 +100,8 @@ class _BlocUserViewState extends State<BlocUserView> {
               )
             ) : Container(
               alignment: Alignment.center,
-              child: Text('No Blocked Users'),)
+              child: Text('No Blocked Users'),),
+            is_loading_select ? CenterCircleIndicator() : Text('')
           ],
         ),
       ),

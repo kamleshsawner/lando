@@ -1,3 +1,4 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
@@ -37,11 +38,21 @@ class _SignUpViewState extends State<SignUpView> {
   List gender=["Male","Female","Other"];
   String select;
 
+  // push otification
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  var token = '';
+
 
   @override
   void initState() {
     super.initState();
     requestSignup = RequestSignup();
+  }
+
+  void getFirebaseToken() {
+    _firebaseMessaging.getToken().then((gen_token) {
+      token = gen_token;
+    });
   }
 
   // submit
@@ -56,6 +67,7 @@ class _SignUpViewState extends State<SignUpView> {
       setState(() {
         is_loading = true;
       });
+      requestSignup.device_token = token;
       responseLogin = await APIServices().userSignup(requestSignup);
       if(responseLogin.status==200){
         setData();
@@ -274,7 +286,8 @@ class _SignUpViewState extends State<SignUpView> {
                                                     ),
                                                     showTitleActions: true,
                                                     minTime: DateTime(1900, 1, 1),
-                                                    maxTime: new DateTime(2000,12,31)
+                                                    // maxTime: new DateTime(2000,12,31)
+                                                    maxTime: new DateTime(DateTime.now().year-18,DateTime.now().month,DateTime.now().day)
                                                     , onConfirm: (date) {
                                                       print('confirm $date');
                                                       _date = '${date.day}-${date.month}-${date.year}';

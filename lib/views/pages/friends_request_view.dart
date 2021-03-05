@@ -11,9 +11,15 @@ import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
 import 'package:lando/util/utility.dart';
 import 'package:lando/views/pages/friends_view.dart';
+import 'package:lando/views/pages/home_view.dart';
 import 'package:lando/views/widget/center_circle_indicator.dart';
 
 class FriendsRequestView extends StatefulWidget {
+
+  String callfrom;
+
+  FriendsRequestView({this.callfrom});
+
   @override
   _FriendsRequestViewState createState() => _FriendsRequestViewState();
 }
@@ -58,8 +64,13 @@ class _FriendsRequestViewState extends State<FriendsRequestView> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: (){
-        Navigator.pushReplacement(context, MaterialPageRoute(
-            builder: (context) =>  FriendsView(type: '1')));
+        if(widget.callfrom == MyConstant.NAV_REQUESTCALL_FREIND){
+          Navigator.pushReplacement(context, MaterialPageRoute(
+              builder: (context) =>  FriendsView(type: '1')));
+        }else{
+          Navigator.pushReplacement(context, MaterialPageRoute(
+              builder: (context) =>  HomeView()));
+        }
       },
       child: Scaffold(
         appBar: AppBar(
@@ -86,8 +97,13 @@ class _FriendsRequestViewState extends State<FriendsRequestView> {
                       icon: Icon(Icons.arrow_back_ios,size: 25),
                       color: Colors.white,
                       onPressed: (){
-                        Navigator.pushReplacement(context, MaterialPageRoute(
-                            builder: (context) =>  FriendsView(type: '1')));
+                        if(widget.callfrom == MyConstant.NAV_REQUESTCALL_FREIND){
+                          Navigator.pushReplacement(context, MaterialPageRoute(
+                              builder: (context) =>  FriendsView(type: '1')));
+                        }else{
+                          Navigator.pushReplacement(context, MaterialPageRoute(
+                              builder: (context) =>  HomeView()));
+                        }
                       },
                     ),
                     Expanded(child: Center(child: Text('Friend Request',style: TextStyle(color: Colors.white,fontSize: 16),))),

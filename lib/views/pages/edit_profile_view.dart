@@ -452,6 +452,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                             height: 45,
                             onPressed: (){
                               if(get_response.qus_ans_list != null){
+                                var fil_list = getFilterList(get_response.qus_ans_list);
                                 Navigator.pushReplacement(context, MaterialPageRoute(
                                     builder: (context) => EditQuestionsView(que_ans_list: get_response.qus_ans_list,)
                                 ));
@@ -574,4 +575,16 @@ class _EditProfileViewState extends State<EditProfileView> {
       Navigator.push(context, MaterialPageRoute(builder: (context) => FullImageView(gallery_list:get_response.gallery_list,img_index: img_index,)));
     }
   }
+
+  List<QuestionAnswer> getFilterList(List<QuestionAnswer> qus_ans_list) {
+    print(qus_ans_list.length.toString());
+    var filterlist = List<QuestionAnswer>();
+    for(int i=0;i < qus_ans_list.length;i++){
+      if(qus_ans_list[i].answer != '' && qus_ans_list[i].answer == null) {
+        filterlist.add(qus_ans_list[i]);
+      }
+    }
+    return filterlist;
+  }
+
 }

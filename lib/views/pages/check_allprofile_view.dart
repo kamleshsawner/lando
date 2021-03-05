@@ -23,6 +23,10 @@ class CheckAllProfileView extends StatefulWidget {
   String id;
   String name;
 
+  // heart - purple
+  // thumbsup - green
+  /// cross - red
+
   CheckAllProfileView({this.id, this.name});
 
   @override
@@ -55,7 +59,9 @@ class _CheckAllProfileViewState extends State<CheckAllProfileView> {
           userid: userid.toString(), group_id: widget.id)).then((response) =>
       {
         response_all_profile = response,
-        if(response_all_profile.list_profiles.length > 0){
+        if(response_all_profile.list_profiles == null ){
+          is_success = false,
+        }else if(response_all_profile.list_profiles == null || response_all_profile.list_profiles.length > 0){
           is_success = true,
         },
         setState(() {
@@ -160,7 +166,7 @@ class _CheckAllProfileViewState extends State<CheckAllProfileView> {
                   Container(
                     alignment: Alignment.center,
                     child: IconButton(icon: Icon(
-                      Icons.cancel_rounded, color: Colors.black, size: 50,),
+                      Icons.cancel_rounded, color: Colors.red, size: 50,),
                       onPressed: () {
                         cancelFriend();
                       },
@@ -169,7 +175,7 @@ class _CheckAllProfileViewState extends State<CheckAllProfileView> {
                   Container(
                     alignment: Alignment.center,
                     child: IconButton(
-                      icon: Icon(issameGender() ? Icons.thumb_up :Icons.favorite, color: Colors.grey, size: 50),
+                      icon: Icon(issameGender() ? Icons.thumb_up :Icons.favorite, color: issameGender() ?Colors.green : Colors.purple, size: 50),
                       onPressed: () {
                         addFriend();
                       },

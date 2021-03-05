@@ -23,8 +23,10 @@ class ReqUser{
   String image;
   int status;
   String firebase_chatid;
+  int is_blocked;
+  int is_friend_blocked;
 
-  ReqUser({this.id,this.name,this.image,this.status,this.firebase_chatid});
+  ReqUser({this.id,this.name,this.image,this.status,this.firebase_chatid,this.is_blocked,this.is_friend_blocked});
 
   factory ReqUser.fromjson(Map<String,dynamic> json){
     return ReqUser(
@@ -33,6 +35,8 @@ class ReqUser{
       image : json['profile'],
       status : json['is_accept'],
       firebase_chatid : json['firebase_chatid'],
+      is_blocked: 1,
+      is_friend_blocked: 1,
     );
   }
 
@@ -43,6 +47,20 @@ class ReqUser{
       image : json['profile'],
       status : 0,
       firebase_chatid : json['firebase_chatid'],
+      is_blocked: json['is_blocked'],
+      is_friend_blocked: json['is_friend_blocked'],
+    );
+  }
+
+  factory ReqUser.fromjsonforfriendsforblockuser(Map<String,dynamic> json){
+    return ReqUser(
+      id: json['id'],
+      name: json['name'],
+      image : json['profile'],
+      status : 0,
+      firebase_chatid : json['firebase_chatid'],
+      is_blocked: 1,
+      is_friend_blocked: 1,
     );
   }
 

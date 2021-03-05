@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_session/flutter_session.dart';
@@ -51,15 +52,27 @@ class _SigninViewState extends State<SigninView> {
   // facebook login
   final facebookLogin = FacebookLogin();
 
+  // push otification
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging();
+  var token = '';
 
   @override
   void initState() {
     super.initState();
     requestLogin = RequestLogin();
+    getFirebaseToken();
   }
+
+  void getFirebaseToken() {
+    _firebaseMessaging.getToken().then((gen_token) {
+      token = gen_token;
+    });
+  }
+
 
   // submit
   void _submit() async{
+    print('my token is - $token');
     final isValid = _formkey.currentState.validate();
     if (!isValid) {
       return;
@@ -67,6 +80,7 @@ class _SigninViewState extends State<SigninView> {
       setState(() {
         is_loading = true;
       });
+      requestLogin.device_token = token;
       responseLogin = await APIServices().userLogin(requestLogin);
       if(responseLogin.status==200){
         setData(responseLogin.status,EMAIL_TYPE);
@@ -113,6 +127,8 @@ class _SigninViewState extends State<SigninView> {
 
   // social submit
   void socialSubmit(RequestSocialLogin requestSocialLogin,String type) async{
+
+    requestSocialLogin.device_token = token;
     responseLogin = await APIServices().userSocialLogin(requestSocialLogin);
     print('status - ${responseLogin.status}');
     if(responseLogin.status==200 || responseLogin.status==201 ){
@@ -434,6 +450,7 @@ class _SigninViewState extends State<SigninView> {
       ),
     );
   }
+
 
 
 }

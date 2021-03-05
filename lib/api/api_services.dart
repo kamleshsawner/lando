@@ -90,6 +90,7 @@ class APIServices {
 
   // login api
   Future<ResponseLogin> userLogin(RequestLogin requestLogin) async {
+    print(requestLogin.tojson().toString());
     final response = await postCall(path: API_LOGIN, parameters: requestLogin.tojson());
     return ResponseLogin.fromjson(json.decode(response.body), response.statusCode);
   }
@@ -286,6 +287,7 @@ class APIServices {
     print(requestAallUserProfile.tojson().toString());
     final response = await postCall(path: API_ALL_USER_PROFILE, parameters: requestAallUserProfile.tojson());
     print(response.body);
+    print(response.statusCode.toString());
     if(response.statusCode == 200){
       var list = List<UserProfile>();
       var data = json.decode(response.body);
@@ -360,7 +362,7 @@ class APIServices {
     print(response_data.toString());
     if(response.statusCode == 200){
       var list_array = response_data['users'] as List;
-      List<ReqUser> list = list_array.map((myobject) => ReqUser.fromjsonforfriends(myobject)).toList();
+      List<ReqUser> list = list_array.map((myobject) => ReqUser.fromjsonforfriendsforblockuser(myobject)).toList();
       return ResponseFriendReqList(status: response.statusCode,message: response_data['message'],user_list: list);
     }else{
       return ResponseFriendReqList(status: response.statusCode,message: response_data['message'],user_list: null);

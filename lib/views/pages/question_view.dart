@@ -148,17 +148,6 @@ class _QuestionsViewState extends State<QuestionsView> {
                           },
                         ),
                       ),
-                      Container(
-                          alignment: Alignment.bottomRight,
-                          margin: EdgeInsets.all(20),
-                          child: MyGradientButton(
-                            child: Text('Skip',style: TextStyle(fontSize: 18,color: Colors.white,fontWeight: FontWeight.w400),),
-                            gradient: LinearGradient(colors: [MyColors.COLOR_PRIMARY_LIGHT,MyColors.COLOR_PRIMARY_DARK,]),
-                            height: 45,
-                            onPressed: (){
-                              _removeQuestion();
-                            },
-                          ))
                     ],
                   ),
                 ),
@@ -189,6 +178,9 @@ class _QuestionsViewState extends State<QuestionsView> {
       }else{
         list.removeAt(index);
         my_index = ++my_index;
+        if(my_index == 3 || my_index > 3){
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => PackageView() ));
+        }
         setState(() {
         });
       }

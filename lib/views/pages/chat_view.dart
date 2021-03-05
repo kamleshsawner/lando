@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_session/flutter_session.dart';
@@ -37,7 +39,7 @@ class _ChatViewState extends State<ChatView> {
   Stream<QuerySnapshot> chats;
   TextEditingController messageEditingController = new TextEditingController();
 
-    String getChatRoomId(String a, String b) {
+  String getChatRoomId(String a, String b) {
     if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
       return "$b\_$a";
     } else {
@@ -46,16 +48,19 @@ class _ChatViewState extends State<ChatView> {
   }
 
 
-  Widget chatMessages(){
+  Widget chatMessages() {
     return StreamBuilder(
       stream: chats,
-      builder: (context, snapshot){
-        return snapshot.hasData ?  ListView.builder(
-          itemCount: snapshot.data.documents.length,
-            itemBuilder: (context, index){
+      builder: (context, snapshot) {
+        return snapshot.hasData ? ListView.builder(
+            physics: BouncingScrollPhysics(),
+            itemCount: snapshot.data.documents.length,
+            shrinkWrap: true,
+            itemBuilder: (context, index) {
               return MessageTile(
                 message: snapshot.data.documents[index].data["message"],
-                sendByMe: mychat_id == snapshot.data.documents[index].data["sendBy"],
+                sendByMe: mychat_id ==
+                    snapshot.data.documents[index].data["sendBy"],
               );
             }) : Container();
       },
@@ -72,8 +77,10 @@ class _ChatViewState extends State<ChatView> {
             .millisecondsSinceEpoch,
       };
       print(chatMessageMap.toString());
-      print('my chat id - '+mychat_id);
-      DatabaseMethods().addMessage(getChatRoomId(widget.reqUser.firebase_chatid, mychat_id), chatMessageMap);
+      print('my chat id - ' + mychat_id);
+      DatabaseMethods().addMessage(
+          getChatRoomId(widget.reqUser.firebase_chatid, mychat_id),
+          chatMessageMap);
 
       setState(() {
         messageEditingController.text = "";
@@ -82,8 +89,8 @@ class _ChatViewState extends State<ChatView> {
   }
 
   @override
-  void initState(){
-      getData();
+  void initState() {
+    getData();
     super.initState();
   }
 
@@ -96,9 +103,15 @@ class _ChatViewState extends State<ChatView> {
       ),
       key: _scaffold_key,
       body: Container(
-        height: MediaQuery.of(context).size.height,
+        height: MediaQuery
+            .of(context)
+            .size
+            .height,
         decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [MyColors.COLOR_PRIMARY_DARK,MyColors.COLOR_PRIMARY_LIGHT],
+            gradient: LinearGradient(colors: [
+              MyColors.COLOR_PRIMARY_DARK,
+              MyColors.COLOR_PRIMARY_LIGHT
+            ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter
             )
@@ -111,9 +124,9 @@ class _ChatViewState extends State<ChatView> {
               child: Row(
                 children: <Widget>[
                   IconButton(
-                    icon: Icon(Icons.arrow_back_ios,size: 25),
+                    icon: Icon(Icons.arrow_back_ios, size: 25),
                     color: Colors.white,
-                    onPressed: (){
+                    onPressed: () {
                       Navigator.pop(context);
                     },
                   ),
@@ -125,22 +138,26 @@ class _ChatViewState extends State<ChatView> {
                     child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: FadeInImage(
-                          image: NetworkImage(Utility.getCompletePath(widget.reqUser.image)),
-                          placeholder: AssetImage(MyAssets.ASSET_IMAGE_LIST_DUMMY_PROFILE),
+                          image: NetworkImage(Utility.getCompletePath(widget
+                              .reqUser.image)),
+                          placeholder: AssetImage(
+                              MyAssets.ASSET_IMAGE_LIST_DUMMY_PROFILE),
                           height: 45,
-                          width:45,
+                          width: 45,
                           fit: BoxFit.fill,
                         )
                     ),),
                   Expanded(child: GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       Navigator.push(context, MaterialPageRoute(
-                          builder: (context) => SendRequestView(user: DestinationUser(
-                            firebase_chatid: widget.reqUser.firebase_chatid,
-                            image: widget.reqUser.image,
-                            name: widget.reqUser.name,
-                            id: widget.reqUser.id
-                          ),status : 4)
+                          builder: (context) =>
+                              SendRequestView(user: DestinationUser(
+                                  firebase_chatid: widget.reqUser
+                                      .firebase_chatid,
+                                  image: widget.reqUser.image,
+                                  name: widget.reqUser.name,
+                                  id: widget.reqUser.id
+                              ), status: 4)
                       ));
                     },
                     child: Container(
@@ -149,16 +166,21 @@ class _ChatViewState extends State<ChatView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: <Widget>[
-                          Text(widget.reqUser.name,style: TextStyle(color: Colors.white,fontSize: 18),),
+                          Text(widget.reqUser.name, style: TextStyle(
+                              color: Colors.white, fontSize: 18),),
                         ],
                       ),
                     ),
                   )),
                   GestureDetector(
-                    onTap: (){_menuOption();},
+                    onTap: () {
+                      _menuOption();
+                    },
                     child: Container(
                       padding: EdgeInsets.all(15),
-                      child: Image.asset(MyAssets.ASSET_ICON_CONTEXT_MENU,width: 50,height: 60,),
+                      child: Image.asset(
+                        MyAssets.ASSET_ICON_CONTEXT_MENU, width: 50,
+                        height: 60,),
                     ),
                   ),
                 ],
@@ -173,48 +195,7 @@ class _ChatViewState extends State<ChatView> {
               margin: EdgeInsets.fromLTRB(0, 60, 0, 60),
               child: chatMessages(),
             ),
-            Container(alignment: Alignment.bottomCenter,
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                color: Color(0x54FFFFFF),
-                child: Row(
-                  children: [
-                    Expanded(
-                        child: TextField(
-                          controller: messageEditingController,
-                          style: simpleTextStyle(),
-                          decoration: InputDecoration(
-                              hintText: "Write a message ...",
-                              hintStyle: TextStyle(
-                                color: Colors.black54,
-                                fontSize: 16,
-                              ),
-                              border: InputBorder.none
-                          ),
-                        )),
-                    SizedBox(width: 16,),
-                    GestureDetector(
-                      onTap: () {
-                        addMessage();
-                      },
-                      child: Container(
-                          height: 50,
-                          width: 50,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(40)
-                          ),
-                          padding: EdgeInsets.all(12),
-                          child: Icon(Icons.send,size: 25,color: Colors.red,)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            getBottomView(),
             is_loading ? CenterCircleIndicator() : Text('')
           ],
         ),
@@ -222,11 +203,11 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  void _menuOption(){
+  void _menuOption() {
     showModalBottomSheet(
         backgroundColor: Colors.transparent,
         context: context,
-        builder: (builder){
+        builder: (builder) {
           return Container(
             height: 340,
             child: Column(
@@ -242,37 +223,45 @@ class _ChatViewState extends State<ChatView> {
                       SizedBox(height: 15,),
                       Container(
                           padding: EdgeInsets.all(12),
-                          child: Center(child: Text('Select Option',style: TextStyle(color: Colors.black,fontSize: 18,fontWeight: FontWeight.bold),),)),
+                          child: Center(
+                            child: Text('Select Option', style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold),),)),
 /*
                       Container(
                           padding: EdgeInsets.all(12),
                           child: Center(child: Text('Clear All Chat',style: TextStyle(color: Colors.black,fontSize: 16),),)),
 */
                       GestureDetector(
-                        onTap: (){
+                        onTap: () {
                           Navigator.pop(context);
                           reportUser();
                         },
                         child: Container(
                             padding: EdgeInsets.all(12),
-                            child: Center(child: Text('Report User',style: TextStyle(color: Colors.black,fontSize: 16),),)),
+                            child: Center(child: Text('Report User',
+                              style: TextStyle(
+                                  color: Colors.black, fontSize: 16),),)),
                       ),
                       GestureDetector(
-                        onTap: (){
+                        onTap: () {
                           Navigator.pop(context);
                           blockUser();
                         },
                         child: Container(
                             padding: EdgeInsets.all(12),
-                            child: Center(child: Text('Block User',style: TextStyle(color: Colors.red,fontSize: 16),),)),
+                            child: Center(child: Text('Block User',
+                              style: TextStyle(
+                                  color: Colors.red, fontSize: 16),),)),
                       ),
                       SizedBox(height: 15,),
                     ],
                   ),
                 ),
-                Container(height: 15,color: Colors.transparent,),
+                Container(height: 15, color: Colors.transparent,),
                 GestureDetector(
-                  onTap: (){
+                  onTap: () {
                     Navigator.pop(context);
                   },
                   child: Container(
@@ -283,7 +272,9 @@ class _ChatViewState extends State<ChatView> {
                     ),
                     child: Container(
                         padding: EdgeInsets.all(15),
-                        child: Center(child: Text('Cancel',style: TextStyle(color: Colors.red,fontSize: 16),),)),
+                        child: Center(
+                          child: Text('Cancel', style: TextStyle(color: Colors
+                              .red, fontSize: 16),),)),
                   ),
                 ),
               ],
@@ -293,13 +284,33 @@ class _ChatViewState extends State<ChatView> {
     );
   }
 
-  Future<Null> blockUser() async{
+  Future<Null> blockUser() async {
     is_loading = true;
-    setState(() {
-    });
+    setState(() {});
     ResponseMessage responsemessage;
-    await FlutterSession().get(MyConstant.SESSION_ID).then((userid) => {
-      APIServices().blockUnblockUser(RequestCheckFriendship(userid: userid.toString(),action_userid: widget.reqUser.id.toString())).then((response) => {
+    await FlutterSession().get(MyConstant.SESSION_ID).then((userid) =>
+    {
+      APIServices().blockUnblockUser(RequestCheckFriendship(
+          userid: userid.toString(),
+          action_userid: widget.reqUser.id.toString())).then((response) => {
+      responsemessage = response,
+          setState(() {
+            is_loading = false;
+          }),
+          Utility.showInSnackBar(responsemessage.message, _scaffold_key),
+          })
+    });
+  }
+
+  Future<Null> reportUser() async {
+    is_loading = true;
+    setState(() {});
+    ResponseMessage responsemessage;
+    await FlutterSession().get(MyConstant.SESSION_ID).then((userid) =>
+    {
+      APIServices().reportUser(RequestReportUser(userid: userid.toString(),
+          action_reportto: widget.reqUser.id.toString())).then((response) =>
+      {
         responsemessage = response,
         setState(() {
           is_loading = false;
@@ -309,31 +320,78 @@ class _ChatViewState extends State<ChatView> {
     });
   }
 
-  Future<Null> reportUser() async{
-    is_loading = true;
-    setState(() {
-    });
-    ResponseMessage responsemessage;
-    await FlutterSession().get(MyConstant.SESSION_ID).then((userid) => {
-      APIServices().reportUser(RequestReportUser(userid: userid.toString(),action_reportto : widget.reqUser.id.toString())).then((response) => {
-        responsemessage = response,
-        setState(() {
-          is_loading = false;
-        }),
-        Utility.showInSnackBar(responsemessage.message, _scaffold_key),
-      })
-    });
-  }
-
-  void getData() async{
+  void getData() async {
     mychat_id = await FlutterSession().get(MyConstant.SESSION_FIREBASE_CHAT_ID);
-    await FlutterSession().get(MyConstant.SESSION_FIREBASE_CHAT_ID).then((value) {
-      DatabaseMethods().getChats(getChatRoomId(widget.reqUser.firebase_chatid, mychat_id)).then((val) {
+    await FlutterSession().get(MyConstant.SESSION_FIREBASE_CHAT_ID).then((
+        value) {
+      DatabaseMethods().getChats(
+          getChatRoomId(widget.reqUser.firebase_chatid, mychat_id)).then((val) {
         setState(() {
           chats = val;
         });
       });
     });
+  }
+
+  Widget getBottomView() {
+    if (widget.reqUser.is_blocked == 1 &&
+        widget.reqUser.is_friend_blocked == 1) {
+      return Container(alignment: Alignment.bottomCenter,
+        width: MediaQuery
+            .of(context)
+            .size
+            .width,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          color: Color(0x54FFFFFF),
+          child: Row(
+            children: [
+              Expanded(
+                  child: TextField(
+                    controller: messageEditingController,
+                    style: simpleTextStyle(),
+                    decoration: InputDecoration(
+                        hintText: "Write a message ...",
+                        hintStyle: TextStyle(
+                          color: Colors.black54,
+                          fontSize: 16,
+                        ),
+                        border: InputBorder.none
+                    ),
+                  )),
+              SizedBox(width: 16,),
+              GestureDetector(
+                onTap: () {
+                  addMessage();
+                },
+                child: Container(
+                    height: 50,
+                    width: 50,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(40)
+                    ),
+                    padding: EdgeInsets.all(12),
+                    child: Icon(Icons.send, size: 25, color: Colors.red,)),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return Container(alignment: Alignment.bottomCenter,
+        width: MediaQuery
+            .of(context)
+            .size
+            .width,
+        child: Container(
+          padding: EdgeInsets.all(10),
+          child: Text(widget.reqUser.is_blocked == 0
+              ? 'Unblock to send message'
+              : 'You are blocked'),
+        ),
+      );
+    }
   }
 }
 
@@ -367,9 +425,9 @@ class MessageTile extends StatelessWidget {
                 bottomLeft: Radius.circular(23)
             ) :
             BorderRadius.only(
-        topLeft: Radius.circular(23),
-          topRight: Radius.circular(23),
-          bottomRight: Radius.circular(23)),
+                topLeft: Radius.circular(23),
+                topRight: Radius.circular(23),
+                bottomRight: Radius.circular(23)),
             gradient: LinearGradient(
               colors: sendByMe ? [
                 const Color(0xFFf55505),
@@ -384,10 +442,10 @@ class MessageTile extends StatelessWidget {
         child: Text(message,
             textAlign: TextAlign.start,
             style: TextStyle(
-            color: sendByMe ? Colors.white : Colors.black,
-            fontSize: 16,
-            fontFamily: 'OverpassRegular',
-            fontWeight: FontWeight.w300)),
+                color: sendByMe ? Colors.white : Colors.black,
+                fontSize: 16,
+                fontFamily: 'OverpassRegular',
+                fontWeight: FontWeight.w300)),
       ),
     );
   }

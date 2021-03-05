@@ -1,12 +1,15 @@
 
 class MyConstant{
 
-  static const String TEST_VERIOSN_APP= 'Test Version : 1.0.0.6';
+  static const String TEST_VERIOSN_APP= 'Test Version : 1.0.0.7';
   static const String NAV_LOCATION= 'Lando Location';
   static const String NAV_PROFILE= 'Profile';
   static const String NAV_FRIENDS= 'Friends';
   static const String NAV_SETTING= 'Settings';
   static const String NAV_PACKAGE= 'Premium Package';
+
+  static const String NAV_REQUESTCALL_HOME = 'request_home';
+  static const String NAV_REQUESTCALL_FREIND = 'request_freind';
 
 
   static const String SETTING_EDIT_PROFILE = 'Details';

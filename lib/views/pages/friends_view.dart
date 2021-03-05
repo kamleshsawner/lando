@@ -109,7 +109,7 @@ class _FriendsViewState extends State<FriendsView> {
                     widget.type == '1' ? GestureDetector(
                       onTap: () {
                         Navigator.pushReplacement(context, MaterialPageRoute(
-                            builder: (context) => FriendsRequestView()
+                            builder: (context) => FriendsRequestView(callfrom: MyConstant.NAV_REQUESTCALL_FREIND,)
                         ));
                       },
                       child: Container(
