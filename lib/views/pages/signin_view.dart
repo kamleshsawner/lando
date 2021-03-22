@@ -181,7 +181,8 @@ class _SigninViewState extends State<SigninView> {
     DatabaseMethods databaseMethods = new DatabaseMethods();
       Map<String,String> userDataMap = {
         "userName" : user.firebase_chatid,
-        "userEmail" : user.email
+        "userEmail" : user.email,
+        "token" : token
       };
       print('user info - '+userDataMap.toString());
       databaseMethods.addUserInfo(userDataMap);
@@ -205,7 +206,8 @@ class _SigninViewState extends State<SigninView> {
       if(result != null){
         Map<String,String> userDataMap = {
           "userName" : user.firebase_chatid,
-          "userEmail" : user.email
+          "userEmail" : user.email,
+          "token" : token
         };
         print('user info - '+userDataMap.toString());
         databaseMethods.addUserInfo(userDataMap);

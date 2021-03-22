@@ -1,7 +1,7 @@
 
 class MyConstant{
 
-  static const String TEST_VERIOSN_APP= 'Test Version : 1.0.0.7';
+  static const String TEST_VERIOSN_APP= 'Test Version : 1.0.0.9';
   static const String NAV_LOCATION= 'Lando Location';
   static const String NAV_PROFILE= 'Profile';
   static const String NAV_FRIENDS= 'Friends';

@@ -47,6 +47,7 @@ class _SignUpViewState extends State<SignUpView> {
   void initState() {
     super.initState();
     requestSignup = RequestSignup();
+    getFirebaseToken();
   }
 
   void getFirebaseToken() {
@@ -111,7 +112,8 @@ class _SignUpViewState extends State<SignUpView> {
             if(result != null){
               Map<String,String> userDataMap = {
                 "userName" : responseLogin.user.firebase_chatid,
-                "userEmail" : requestSignup.email
+                "userEmail" : requestSignup.email,
+                "token" : token
               };
               print('user info - '+userDataMap.toString());
               databaseMethods.addUserInfo(userDataMap);

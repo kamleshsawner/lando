@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_session/flutter_session.dart';
 import 'package:lando/api/api_services.dart';
@@ -17,6 +19,7 @@ import 'package:lando/util/utility.dart';
 import 'package:lando/views/pages/send_request_view.dart';
 import 'package:lando/views/widget/app_widgets.dart';
 import 'package:lando/views/widget/center_circle_indicator.dart';
+import 'package:http/http.dart' as http;
 
 class ChatView extends StatefulWidget {
 
@@ -30,8 +33,51 @@ class ChatView extends StatefulWidget {
 
 class _ChatViewState extends State<ChatView> {
 
+  // chat notification start
+
+  final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+  var serverToken = 'AAAAsbErS5I:APA91bF8HarBNEM9phK6EgbvCx5lxgA78srBBBgnLRP0ozLrEblt2nANjDiRKRJCDvUG0t4mjHXFED9fvKbxTFvisVSWgviHZVqFdgXi7b1TvPBQxi-iPR6TMXoNbc68HR-U-jR64KQS';
+  Future<Map<String, dynamic>> sendAndRetrieveMessage(String title,String message) async {
+    await firebaseMessaging.requestNotificationPermissions(
+      const IosNotificationSettings(
+          sound: true, badge: true, alert: true, provisional: false),
+    );
+
+    await http.post(
+      'https://fcm.googleapis.com/fcm/send',
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'key=$serverToken',
+      },
+      body: jsonEncode(
+        <String, dynamic>{
+          'notification': <String, dynamic>{
+            'body': message,
+            'title': title
+          },
+          'priority': 'high',
+          'data': <String, dynamic>{
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'id': '1',
+            'status': 'done'
+          },
+          // 'to': await firebaseMessaging.getToken(),
+          'to': widget.reqUser.device_token,
+        },
+      ),
+    );
+  }
+
+  // chat notification end
+
+  // auto scrolling start
+  ScrollController _controller;
+  // auto scrolling end
+
+
   var _scaffold_key = GlobalKey<ScaffoldState>();
   var is_loading = false;
+  var login_user = '';
 
   var mychat_id = '';
 
@@ -52,8 +98,11 @@ class _ChatViewState extends State<ChatView> {
     return StreamBuilder(
       stream: chats,
       builder: (context, snapshot) {
+        Timer(Duration(milliseconds: 500),
+                () => _controller.jumpTo(_controller.position.maxScrollExtent));
         return snapshot.hasData ? ListView.builder(
             physics: BouncingScrollPhysics(),
+            controller: _controller,
             itemCount: snapshot.data.documents.length,
             shrinkWrap: true,
             itemBuilder: (context, index) {
@@ -90,6 +139,7 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   void initState() {
+    _controller = ScrollController();
     getData();
     super.initState();
   }
@@ -97,107 +147,123 @@ class _ChatViewState extends State<ChatView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset : true,
       appBar: AppBar(
-        toolbarHeight: 0,
+        titleSpacing: 0.0,
+        automaticallyImplyLeading: false,
         backgroundColor: MyColors.COLOR_STATUS_BAR,
-      ),
-      key: _scaffold_key,
-      body: Container(
-        height: MediaQuery
-            .of(context)
-            .size
-            .height,
-        decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [
-              MyColors.COLOR_PRIMARY_DARK,
-              MyColors.COLOR_PRIMARY_LIGHT
-            ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter
-            )
-        ),
-        child: Stack(
-          children: <Widget>[
-            Container(
-              height: 55,
-              padding: EdgeInsets.fromLTRB(15, 0, 5, 0),
-              child: Row(
-                children: <Widget>[
-                  IconButton(
-                    icon: Icon(Icons.arrow_back_ios, size: 25),
-                    color: Colors.white,
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                        color: Colors.grey,
-                        borderRadius: BorderRadius.circular(20)
+        title: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [
+                MyColors.COLOR_PRIMARY_DARK,
+                MyColors.COLOR_PRIMARY_LIGHT
+              ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter
+              )
+          ),
+          child: Column(
+            children: <Widget>[
+              Container(
+                height: 55,
+                padding: EdgeInsets.fromLTRB(15, 0, 5, 0),
+                child: Row(
+                  children: <Widget>[
+                    IconButton(
+                      icon: Icon(Icons.arrow_back_ios, size: 25),
+                      color: Colors.white,
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
                     ),
-                    child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: FadeInImage(
-                          image: NetworkImage(Utility.getCompletePath(widget
-                              .reqUser.image)),
-                          placeholder: AssetImage(
-                              MyAssets.ASSET_IMAGE_LIST_DUMMY_PROFILE),
-                          height: 45,
-                          width: 45,
-                          fit: BoxFit.fill,
-                        )
-                    ),),
-                  Expanded(child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(
-                          builder: (context) =>
-                              SendRequestView(user: DestinationUser(
-                                  firebase_chatid: widget.reqUser
-                                      .firebase_chatid,
-                                  image: widget.reqUser.image,
-                                  name: widget.reqUser.name,
-                                  id: widget.reqUser.id
-                              ), status: 4)
-                      ));
-                    },
-                    child: Container(
-                      margin: EdgeInsets.only(left: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text(widget.reqUser.name, style: TextStyle(
-                              color: Colors.white, fontSize: 18),),
-                        ],
+                    Container(
+                      decoration: BoxDecoration(
+                          color: Colors.grey,
+                          borderRadius: BorderRadius.circular(20)
+                      ),
+                      child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: FadeInImage(
+                            image: NetworkImage(Utility.getCompletePath(widget
+                                .reqUser.image)),
+                            placeholder: AssetImage(
+                                MyAssets.ASSET_IMAGE_LIST_DUMMY_PROFILE),
+                            height: 45,
+                            width: 45,
+                            fit: BoxFit.fill,
+                          )
+                      ),),
+                    Expanded(child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(
+                            builder: (context) =>
+                                SendRequestView(user: DestinationUser(
+                                    firebase_chatid: widget.reqUser
+                                        .firebase_chatid,
+                                    image: widget.reqUser.image,
+                                    name: widget.reqUser.name,
+                                    id: widget.reqUser.id
+                                ), status: 4)
+                        ));
+                      },
+                      child: Container(
+                        margin: EdgeInsets.only(left: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text(widget.reqUser.name, style: TextStyle(
+                                color: Colors.white, fontSize: 18),),
+                          ],
+                        ),
+                      ),
+                    )),
+                    GestureDetector(
+                      onTap: () {
+                        _menuOption();
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(15),
+                        child: Image.asset(
+                          MyAssets.ASSET_ICON_CONTEXT_MENU, width: 50,
+                          height: 60,),
                       ),
                     ),
-                  )),
-                  GestureDetector(
-                    onTap: () {
-                      _menuOption();
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(15),
-                      child: Image.asset(
-                        MyAssets.ASSET_ICON_CONTEXT_MENU, width: 50,
-                        height: 60,),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Container(
-              height: 1,
-              color: Colors.white,
-              margin: EdgeInsets.only(top: 55),
-            ),
-            Container(
-              margin: EdgeInsets.fromLTRB(0, 60, 0, 60),
-              child: chatMessages(),
-            ),
-            getBottomView(),
-            is_loading ? CenterCircleIndicator() : Text('')
-          ],
+              Container(
+                height: 1,
+                color: Colors.white,
+              ),
+            ],
+          ),
+        ),
+      ),
+      key: _scaffold_key,
+      body: SingleChildScrollView(
+        child: Container(
+          height: MediaQuery.of(context).size.height-55,
+          decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [
+                MyColors.COLOR_PRIMARY_DARK,
+                MyColors.COLOR_PRIMARY_LIGHT
+              ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter
+              )
+          ),
+          child: Stack(
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.fromLTRB(0, 0, 0, 90),
+                child: chatMessages(),
+              ),
+              getBottomView(),
+              is_loading ? CenterCircleIndicator() : Text('')
+            ],
+          ),
         ),
       ),
     );
@@ -322,6 +388,7 @@ class _ChatViewState extends State<ChatView> {
 
   void getData() async {
     mychat_id = await FlutterSession().get(MyConstant.SESSION_FIREBASE_CHAT_ID);
+    login_user = await FlutterSession().get(MyConstant.SESSION_NAME);
     await FlutterSession().get(MyConstant.SESSION_FIREBASE_CHAT_ID).then((
         value) {
       DatabaseMethods().getChats(
@@ -329,6 +396,8 @@ class _ChatViewState extends State<ChatView> {
         setState(() {
           chats = val;
         });
+        Timer(Duration(milliseconds: 500),
+                () => _controller.jumpTo(_controller.position.maxScrollExtent));
       });
     });
   }
@@ -336,7 +405,10 @@ class _ChatViewState extends State<ChatView> {
   Widget getBottomView() {
     if (widget.reqUser.is_blocked == 1 &&
         widget.reqUser.is_friend_blocked == 1) {
-      return Container(alignment: Alignment.bottomCenter,
+      return Container(
+        alignment: Alignment.bottomCenter,
+        margin: EdgeInsets.only(top: MediaQuery.of(context).size.height-140),
+        height: 60,
         width: MediaQuery
             .of(context)
             .size
@@ -362,7 +434,11 @@ class _ChatViewState extends State<ChatView> {
               SizedBox(width: 16,),
               GestureDetector(
                 onTap: () {
+                  print('login user - $login_user');
+                  sendAndRetrieveMessage(login_user,messageEditingController.text.toString(),);
                   addMessage();
+                  Timer(Duration(milliseconds: 500),
+                          () => _controller.jumpTo(_controller.position.maxScrollExtent));
                 },
                 child: Container(
                     height: 50,
@@ -397,6 +473,7 @@ class _ChatViewState extends State<ChatView> {
 
 
 class MessageTile extends StatelessWidget {
+
   final String message;
   final bool sendByMe;
 
