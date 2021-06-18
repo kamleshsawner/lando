@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lando/api/api_services.dart';
 import 'package:lando/chat/auth.dart';
 import 'package:lando/chat/database.dart';
+import 'package:lando/firebase/firebase_auth.dart';
 import 'package:lando/model/request_model/request_login.dart';
 import 'package:lando/model/request_model/request_social_login.dart';
 import 'package:lando/model/response_model/response_login.dart';
@@ -15,6 +16,7 @@ import 'package:lando/model/user.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
+import 'package:lando/util/session_manager.dart';
 import 'package:lando/util/utility.dart';
 import 'package:lando/views/pages/home_view.dart';
 import 'package:lando/views/pages/question_view.dart';
@@ -83,7 +85,7 @@ class _SigninViewState extends State<SigninView> {
       requestLogin.device_token = token;
       responseLogin = await APIServices().userLogin(requestLogin);
       if(responseLogin.status==200){
-        setData(responseLogin.status,EMAIL_TYPE);
+        emailFirebaseSignin(responseLogin.user);
       }else{
         showerror(responseLogin.message);
       }
@@ -134,108 +136,19 @@ class _SigninViewState extends State<SigninView> {
     if(responseLogin.status==200 || responseLogin.status==201 ){
       // 200 - new user
       // 201 - old user
-      setData(responseLogin.status,type);
+      setSocialData(responseLogin.status,type);
     }else{
       showerror(responseLogin.message);
     }
   }
 
-  void setData(int status,String type) async{
-
-    if(type == EMAIL_TYPE || type == GOOGLE_TYPE|| type == FACEBOOK_TYPE){
-      var session = FlutterSession();
-      print('user id  - ${responseLogin.user.id}');
-      await session.set(MyConstant.SESSION_ID, responseLogin.user.id);
-      await session.set(MyConstant.SESSION_FIREBASE_CHAT_ID, responseLogin.user.firebase_chatid);
-      await session.set(MyConstant.SESSION_NAME, responseLogin.user.name);
-      await session.set(MyConstant.SESSION_EMAIL, responseLogin.user.email);
-      await session.set(MyConstant.SESSION_DOB, responseLogin.user.birth_date);
-      await session.set(MyConstant.SESSION_PHONE, responseLogin.user.mobile);
-      await session.set(MyConstant.SESSION_IMAGE, responseLogin.user.image);
-      await session.set(MyConstant.SESSION_GENDER, responseLogin.user.gender);
-      await session.set(MyConstant.SESSION_IS_LOGIN, true);
-    }
-    if(status == 200 && type == EMAIL_TYPE){
-      firebaseLogin();
-    }else if(status == 200 && type == GOOGLE_TYPE ){
-      googleFirebaseSingUp(responseLogin.user);
-    }else if(status == 200 && type == FACEBOOK_TYPE ){
-      facebookFirebaseSingUp(responseLogin.user);
-    }else if(status == 201 && type == GOOGLE_TYPE){
-      setState(() {
-        is_loading =false;
-      });
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeView()));
-    }else if(status == 201 && type == FACEBOOK_TYPE){
-      firebaseLogin();
+  void setSocialData(int status,String type) async{
+    if(status == 200){
+      emailFirebaseSignup(responseLogin.user);
+    }else if(status == 201){
+      emailFirebaseSignin(responseLogin.user);
     }
   }
-
-  googleFirebaseSingUp(User user) async {
-
-    print('firebase sign up - '+user.email+' ,'+user.firebase_chatid);
-    setState(() {
-      is_loading =true;
-    });
-    AuthService authService = new AuthService();
-    DatabaseMethods databaseMethods = new DatabaseMethods();
-      Map<String,String> userDataMap = {
-        "userName" : user.firebase_chatid,
-        "userEmail" : user.email,
-        "token" : token
-      };
-      print('user info - '+userDataMap.toString());
-      databaseMethods.addUserInfo(userDataMap);
-      setState(() {
-        is_loading =false;
-      });
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => QuestionsView()));
-  }
-
-
-  facebookFirebaseSingUp(User user) async {
-
-    print('firebase sign up - '+user.email+' ,'+user.firebase_chatid);
-    setState(() {
-      is_loading =true;
-    });
-    AuthService authService = new AuthService();
-    DatabaseMethods databaseMethods = new DatabaseMethods();
-    await authService.signUpWithEmailAndPassword(user.email,
-        user.email).then((result){
-      if(result != null){
-        Map<String,String> userDataMap = {
-          "userName" : user.firebase_chatid,
-          "userEmail" : user.email,
-          "token" : token
-        };
-        print('user info - '+userDataMap.toString());
-        databaseMethods.addUserInfo(userDataMap);
-        setState(() {
-          is_loading =false;
-        });
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => QuestionsView()));
-      }
-    });
-  }
-
-  firebaseLogin() async {
-    setState(() {
-      is_loading =true;
-    });
-    AuthService authService = new AuthService();
-    DatabaseMethods databaseMethods = new DatabaseMethods();
-    await authService.signInWithEmailAndPassword(responseLogin.user.email,
-        responseLogin.user.email).then((result){
-      if(result != null){
-        setState(() {
-          is_loading =false;
-        });
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeView()));
-      }
-    });
-  }
-
 
   Future googleLogin() async {
     setState(() {
@@ -405,7 +318,7 @@ class _SigninViewState extends State<SigninView> {
                                       children: <Widget>[
                                         GestureDetector(
                                           onTap: (){
-                                            // googleLogin();
+                                            googleLogin();
                                           },
                                           child: Container(
                                             padding: EdgeInsets.all(15),
@@ -415,7 +328,7 @@ class _SigninViewState extends State<SigninView> {
                                         SizedBox(width: 50,),
                                         GestureDetector(
                                           onTap: (){
-                                            // _loginWithFB();
+                                            _loginWithFB();
                                           },
                                           child: Container(
                                             padding: EdgeInsets.all(15),
@@ -453,6 +366,24 @@ class _SigninViewState extends State<SigninView> {
     );
   }
 
+  // email firebase signin
+  void emailFirebaseSignin(User user) async{
+    await MyFirebaseAuth().firebaseSignin(responseLogin.user).then((success){
+      if(success){
+        SessionManager().startSession(responseLogin.user);
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeView()));
+      }
+    });
+  }
 
+  // social firebase sign-up
+  void emailFirebaseSignup(User user) async{
+    await MyFirebaseAuth().firebaseSignUp(user,token).then((success){
+      if(success){
+        SessionManager().startSession(responseLogin.user);
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomeView()));
+      }
+    });
+  }
 
 }

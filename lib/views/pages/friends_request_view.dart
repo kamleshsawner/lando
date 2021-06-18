@@ -32,6 +32,7 @@ class _FriendsRequestViewState extends State<FriendsRequestView> {
   var is_loading_select = false;
   ResponseFriendReqList responsefriendrequlist;
 
+  String login_chat_id = '';
   DatabaseMethods databaseMethods = new DatabaseMethods();
 
 
@@ -47,6 +48,7 @@ class _FriendsRequestViewState extends State<FriendsRequestView> {
 
   // get data
   Future<Null> getData() async {
+    login_chat_id = await FlutterSession().get(MyConstant.SESSION_FIREBASE_CHAT_ID);
     await FlutterSession().get(MyConstant.SESSION_ID).then((userid) => {
       APIServices().getFriendRequestList(RequestToken(user_id: userid.toString())).then((dest_value) => {
         responsefriendrequlist = dest_value,
@@ -164,6 +166,8 @@ class _FriendsRequestViewState extends State<FriendsRequestView> {
           responsefriendrequlist.user_list.removeAt(index),
           if(status == '2'){
             createChatRoom(login_username,requeser.firebase_chatid),
+            addNewFriend(requeser,'1'),
+            databaseMethods.acceptFriendStatus(login_chat_id,requeser.firebase_chatid),
           },
         },
         setState(() {
@@ -175,13 +179,29 @@ class _FriendsRequestViewState extends State<FriendsRequestView> {
 
   createChatRoom(String first_user,String second_user){
 
-    List<String> users = [first_user,second_user];
-    String chatRoomId = getChatRoomId(first_user,second_user);
+    List<String> users = [first_user,second_user,];
+    String chatRoomId = getChatRoomId(first_user,second_user,);
     Map<String, dynamic> chatRoom = {
       "users": users,
       "chatRoomId" : chatRoomId,
+      first_user : '0',
+      second_user : '1',
     };
     databaseMethods.addChatRoom(chatRoom, chatRoomId);
+  }
+
+
+  addNewFriend(ReqUser requeser,String friend_status){
+    Map<String, dynamic> friend_data = {
+      "userId": requeser.id.toString(),
+      "userName": requeser.name,
+      "userImage": requeser.image,
+      "userChatId": requeser.firebase_chatid,
+      "message_count" : '0',
+      "friend_status" : friend_status,
+      "last_time" : DateTime.now().millisecondsSinceEpoch,
+    };
+    databaseMethods.addFriend(login_chat_id, friend_data,requeser.firebase_chatid);
   }
 
 
@@ -192,6 +212,13 @@ class _FriendsRequestViewState extends State<FriendsRequestView> {
       return "$a\_$b";
     }
   }
+}
 
+class UserCount{
+
+  final String user_id;
+  final String count;
+
+  UserCount({this.user_id,this.count});
 
 }

@@ -35,6 +35,7 @@ class _ChatViewState extends State<ChatView> {
 
   // chat notification start
 
+
   final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   var serverToken = 'AAAAsbErS5I:APA91bF8HarBNEM9phK6EgbvCx5lxgA78srBBBgnLRP0ozLrEblt2nANjDiRKRJCDvUG0t4mjHXFED9fvKbxTFvisVSWgviHZVqFdgXi7b1TvPBQxi-iPR6TMXoNbc68HR-U-jR64KQS';
   Future<Map<String, dynamic>> sendAndRetrieveMessage(String title,String message) async {
@@ -127,10 +128,11 @@ class _ChatViewState extends State<ChatView> {
       };
       print(chatMessageMap.toString());
       print('my chat id - ' + mychat_id);
+      print('friend chat id - ' + widget.reqUser.firebase_chatid);
+      DatabaseMethods().updateFriendMessageCounte(mychat_id,widget.reqUser.firebase_chatid,"1");
       DatabaseMethods().addMessage(
-          getChatRoomId(widget.reqUser.firebase_chatid, mychat_id),
-          chatMessageMap);
-
+          getChatRoomId(widget.reqUser.firebase_chatid, mychat_id,),
+          chatMessageMap,widget.reqUser.firebase_chatid);
       setState(() {
         messageEditingController.text = "";
       });
@@ -146,123 +148,125 @@ class _ChatViewState extends State<ChatView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset : true,
-      appBar: AppBar(
-        titleSpacing: 0.0,
-        automaticallyImplyLeading: false,
-        backgroundColor: MyColors.COLOR_STATUS_BAR,
-        title: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [
-                MyColors.COLOR_PRIMARY_DARK,
-                MyColors.COLOR_PRIMARY_LIGHT
-              ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter
-              )
-          ),
-          child: Column(
-            children: <Widget>[
-              Container(
-                height: 55,
-                padding: EdgeInsets.fromLTRB(15, 0, 5, 0),
-                child: Row(
-                  children: <Widget>[
-                    IconButton(
-                      icon: Icon(Icons.arrow_back_ios, size: 25),
-                      color: Colors.white,
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                          color: Colors.grey,
-                          borderRadius: BorderRadius.circular(20)
+    return WillPopScope(
+      onWillPop: (){
+        DatabaseMethods().updateMyMessageCounte( mychat_id,widget.reqUser.firebase_chatid,'0');
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset : true,
+        appBar: AppBar(
+          titleSpacing: 0.0,
+          automaticallyImplyLeading: false,
+          backgroundColor: MyColors.COLOR_STATUS_BAR,
+          title: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [
+                  MyColors.COLOR_PRIMARY_DARK,
+                  MyColors.COLOR_PRIMARY_LIGHT
+                ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter
+                )
+            ),
+            child: Column(
+              children: <Widget>[
+                Container(
+                  height: 55,
+                  padding: EdgeInsets.fromLTRB(15, 0, 5, 0),
+                  child: Row(
+                    children: <Widget>[
+                      IconButton(
+                        icon: Icon(Icons.arrow_back_ios, size: 25),
+                        color: Colors.white,
+                        onPressed: () {
+                          DatabaseMethods().updateMyMessageCounte( mychat_id,widget.reqUser.firebase_chatid,'0');
+                          Navigator.pop(context);
+                        },
                       ),
-                      child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: FadeInImage(
-                            image: NetworkImage(Utility.getCompletePath(widget
-                                .reqUser.image)),
-                            placeholder: AssetImage(
-                                MyAssets.ASSET_IMAGE_LIST_DUMMY_PROFILE),
-                            height: 45,
-                            width: 45,
-                            fit: BoxFit.fill,
-                          )
-                      ),),
-                    Expanded(child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(context, MaterialPageRoute(
-                            builder: (context) =>
-                                SendRequestView(user: DestinationUser(
-                                    firebase_chatid: widget.reqUser
-                                        .firebase_chatid,
-                                    image: widget.reqUser.image,
-                                    name: widget.reqUser.name,
-                                    id: widget.reqUser.id
-                                ), status: 4)
-                        ));
-                      },
-                      child: Container(
-                        margin: EdgeInsets.only(left: 20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Text(widget.reqUser.name, style: TextStyle(
-                                color: Colors.white, fontSize: 18),),
-                          ],
+                      GestureDetector(
+                        onTap: (){
+                          openProfile();
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                              color: Colors.grey,
+                              borderRadius: BorderRadius.circular(20)
+                          ),
+                          child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: FadeInImage(
+                                image: NetworkImage(Utility.getCompletePath(widget
+                                    .reqUser.image)),
+                                placeholder: AssetImage(
+                                    MyAssets.ASSET_IMAGE_LIST_DUMMY_PROFILE),
+                                height: 45,
+                                width: 45,
+                                fit: BoxFit.fill,
+                              )
+                          ),),
+                      ),
+                      Expanded(child: GestureDetector(
+                        onTap: () {
+                          openProfile();
+                        },
+                        child: Container(
+                          margin: EdgeInsets.only(left: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Text(widget.reqUser.name, style: TextStyle(
+                                  color: Colors.white, fontSize: 18),),
+                            ],
+                          ),
+                        ),
+                      )),
+                      GestureDetector(
+                        onTap: () {
+                          _menuOption();
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(15),
+                          child: Image.asset(
+                            MyAssets.ASSET_ICON_CONTEXT_MENU, width: 50,
+                            height: 60,),
                         ),
                       ),
-                    )),
-                    GestureDetector(
-                      onTap: () {
-                        _menuOption();
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(15),
-                        child: Image.asset(
-                          MyAssets.ASSET_ICON_CONTEXT_MENU, width: 50,
-                          height: 60,),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Container(
-                height: 1,
-                color: Colors.white,
-              ),
-            ],
+                Container(
+                  height: 1,
+                  color: Colors.white,
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      key: _scaffold_key,
-      body: SingleChildScrollView(
-        child: Container(
-          height: MediaQuery.of(context).size.height-55,
-          decoration: BoxDecoration(
-              gradient: LinearGradient(colors: [
-                MyColors.COLOR_PRIMARY_DARK,
-                MyColors.COLOR_PRIMARY_LIGHT
+        key: _scaffold_key,
+        body: SingleChildScrollView(
+          child: Container(
+            height: MediaQuery.of(context).size.height-55,
+            decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [
+                  MyColors.COLOR_PRIMARY_DARK,
+                  MyColors.COLOR_PRIMARY_LIGHT
+                ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter
+                )
+            ),
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.fromLTRB(0, 0, 0, 90),
+                  child: chatMessages(),
+                ),
+                getBottomView(),
+                is_loading ? CenterCircleIndicator() : Text('')
               ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter
-              )
-          ),
-          child: Stack(
-            children: <Widget>[
-              Container(
-                margin: EdgeInsets.fromLTRB(0, 0, 0, 90),
-                child: chatMessages(),
-              ),
-              getBottomView(),
-              is_loading ? CenterCircleIndicator() : Text('')
-            ],
+            ),
           ),
         ),
       ),
@@ -469,6 +473,19 @@ class _ChatViewState extends State<ChatView> {
       );
     }
   }
+
+  void openProfile() {
+    Navigator.push(context, MaterialPageRoute(
+        builder: (context) =>
+            SendRequestView(user: DestinationUser(
+                firebase_chatid: widget.reqUser
+                    .firebase_chatid,
+                image: widget.reqUser.image,
+                name: widget.reqUser.name,
+                id: widget.reqUser.id
+            ), status: 4)
+    ));
+  }
 }
 
 
@@ -485,45 +502,50 @@ class MessageTile extends StatelessWidget {
     return Container(
       padding: EdgeInsets.only(
           top: 8,
-          bottom: 8,
           left: sendByMe ? 0 : 24,
           right: sendByMe ? 24 : 0),
       alignment: sendByMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: sendByMe
-            ? EdgeInsets.only(left: 30)
-            : EdgeInsets.only(right: 30),
-        padding: EdgeInsets.only(
-            top: 17, bottom: 17, left: 20, right: 20),
-        decoration: BoxDecoration(
-            borderRadius: sendByMe ? BorderRadius.only(
-                topLeft: Radius.circular(23),
-                topRight: Radius.circular(23),
-                bottomLeft: Radius.circular(23)
-            ) :
-            BorderRadius.only(
-                topLeft: Radius.circular(23),
-                topRight: Radius.circular(23),
-                bottomRight: Radius.circular(23)),
-            gradient: LinearGradient(
-              colors: sendByMe ? [
-                const Color(0xFFf55505),
-                const Color(0xFFf55505)
-              ]
-                  : [
-                const Color(0xFFcfcdcc),
-                const Color(0xFFcfcdcc)
-              ],
-            )
-        ),
-        child: Text(message,
-            textAlign: TextAlign.start,
-            style: TextStyle(
-                color: sendByMe ? Colors.white : Colors.black,
-                fontSize: 16,
-                fontFamily: 'OverpassRegular',
-                fontWeight: FontWeight.w300)),
+          margin: sendByMe
+              ? EdgeInsets.only(left: 30)
+              : EdgeInsets.only(right: 30),
+          padding: EdgeInsets.only(
+              top: 17, bottom: 17, left: 20, right: 20),
+          decoration: BoxDecoration(
+              borderRadius: sendByMe ? BorderRadius.only(
+                  topLeft: Radius.circular(23),
+                  topRight: Radius.circular(23),
+                  bottomLeft: Radius.circular(23)
+              ) :
+              BorderRadius.only(
+                  topLeft: Radius.circular(23),
+                  topRight: Radius.circular(23),
+                  bottomRight: Radius.circular(23)),
+              gradient: LinearGradient(
+                colors: sendByMe ? [
+                  const Color(0xFFf55505),
+                  const Color(0xFFf55505)
+                ]
+                    : [
+                  const Color(0xFFcfcdcc),
+                  const Color(0xFFcfcdcc)
+                ],
+              )
+          ),
+          child: Column(
+            children: <Widget>[
+              Text(message,
+                  textAlign: TextAlign.start,
+                  style: TextStyle(
+                      color: sendByMe ? Colors.white : Colors.black,
+                      fontSize: 16,
+                      fontFamily: 'OverpassRegular',
+                      fontWeight: FontWeight.w300)),
+            ],
+          )
       ),
     );
   }
 }
+
+

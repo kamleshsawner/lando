@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_session/flutter_session.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:lando/api/api_services.dart';
+import 'package:lando/chat/database.dart';
 import 'package:lando/model/request_model/request_alluserprofile.dart';
 import 'package:lando/model/request_model/request_check_friendship.dart';
 import 'package:lando/model/request_model/request_sendrequest.dart';
@@ -40,6 +41,7 @@ class _CheckAllProfileViewState extends State<CheckAllProfileView> {
   var is_success = false;
   ResponseAllProfile response_all_profile;
   String login_gender;
+  String login_chat_id = '';
 
   int user_index = 0;
 
@@ -52,6 +54,7 @@ class _CheckAllProfileViewState extends State<CheckAllProfileView> {
   }
 
   Future<Null> getData() async {
+    login_chat_id = await FlutterSession().get(MyConstant.SESSION_FIREBASE_CHAT_ID);
     login_gender = await FlutterSession().get(MyConstant.SESSION_GENDER);
     await FlutterSession().get(MyConstant.SESSION_ID).then((userid) =>
     {
@@ -190,6 +193,24 @@ class _CheckAllProfileViewState extends State<CheckAllProfileView> {
     );
   }
 
+  addNewFriend(){
+    Map<String, dynamic> friend_data = {
+      "userId": response_all_profile.list_profiles[user_index].user_id,
+      "userName": response_all_profile.list_profiles[user_index].name,
+      "userImage": response_all_profile.list_profiles[user_index].image,
+      "message_count" : '0',
+      "friend_status" : '0',
+      "userChatId": response_all_profile.list_profiles[user_index].chat_id,
+      "last_time" : DateTime.now().millisecondsSinceEpoch,
+    };
+    print(friend_data.toString());
+    DatabaseMethods().addFriend(login_chat_id, friend_data,response_all_profile.list_profiles[user_index].chat_id);
+    user_index = ++user_index;
+    setState(() {
+    is_loading = false;
+    });
+  }
+
   bool checkValidIndex(){
     if(response_all_profile == null){
       return false;
@@ -224,12 +245,14 @@ class _CheckAllProfileViewState extends State<CheckAllProfileView> {
     responsemessage = response,
       if(responsemessage.status != 200){
         Utility.showToast(responsemessage.message),
-      },
-      user_index = ++user_index,
-      setState(() {
+        setState(() {
           is_loading = false;
-        }),
         })
+      },
+      if(responsemessage.status == 200){
+        addNewFriend(),
+      },
+    })
   });
 
   }

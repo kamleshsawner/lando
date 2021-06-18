@@ -51,7 +51,7 @@ class Package{
   }
 
   String getDestination(int destination){
-    return destination == 1 ? '* 1 Destination' : '* Mulitple Destination ($destination)';
+    return destination == 1 ? '* 1 Destination' : '* Multiple Destinations ';
   }
 
   String getTime(int time){
@@ -67,11 +67,11 @@ class Package{
   }
 
   String getLike(int like){
-    return like == 0 ? '* Unlimited Like' : '* Limited Likes';
+    return like == 0 ? '* Unlimited Likes' : '* Limited Likes';
   }
 
   String getSendRequest(int request){
-    return request == 0 ? '* Unlimited Send Request' : '* Limited send request';
+    return request == 0 ? '* Unlimited Send Requests' : '* Limited Send Requests';
   }
 
 }

@@ -284,7 +284,7 @@ class APIServices {
 
   // get all user profile from group id and user id
   Future<ResponseAllProfile> getAllUserProfile(RequestAallUserProfile requestAallUserProfile) async {
-    print(requestAallUserProfile.tojson().toString());
+    print(API_ALL_USER_PROFILE+requestAallUserProfile.tojson().toString());
     final response = await postCall(path: API_ALL_USER_PROFILE, parameters: requestAallUserProfile.tojson());
     print(response.body);
     print(response.statusCode.toString());

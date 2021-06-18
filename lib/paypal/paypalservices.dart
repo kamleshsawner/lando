@@ -5,20 +5,16 @@ import 'package:http_auth/http_auth.dart';
 
 class PaypalServices {
 
-  String domain = "https://api.sandbox.paypal.com"; // for sandbox mode
- // String domain = "https://api.paypal.com"; // for production mode
-
-  // change clientId and secret with your own, provided by paypal
-  // String clientId = 'Ab4vS4vmfQFgUuQMH49F9Uy3L1FdNHtfGrASCyjNijm_EkHWCFM96ex0la-YFbwavw41R3rTKU3k_Bbm';
-  // String secret = 'EDjvPfYgTYqdYWR2BfOiBW4dz_jeeuadqH7Z98pZMDvY33PcViiooqYFWVPFSGbfKBfNOb3LnroSI1hv';
-
-  // lando test production - kamleshsawner89
-  // String clientId = 'AT4U2cTqYkG8gANq08PwUHXTzGY51l-roG2F48XR_g_O1zzhSKMqpzvMQC_lR3dvtDIJv85H6WT7qq3L';
-  // String secret = 'EPoum06f6zKUkk1rfo33G17Iu2Z19IUQ2SftnRNOcvn58-B-9XK3QM8YXqsXo1vFljXxWBrBcWhJED-1';
+  // String domain = "https://api.sandbox.paypal.com"; // for sandbox mode
+  String domain = "https://api.paypal.com"; // for production mode
 
   // lando sandbox - client user login
-  String clientId = 'AVrIw8PD4VHSBUw9dbHWBjZ6WSivZvgn3GRdMHBbW0OIJehW0NNN1vgDrLTUvigK0tZ4GCLoGNz7v9Rv';
-  String secret = 'EJo_ZtoSwwZHlP5aDSVA1S5x1EWXdNWCfiiqnYjbIL699ouWIhvdwRIklezFuaaY2cgFEy3kNB-cAX5f';
+  // String clientId = 'AVrIw8PD4VHSBUw9dbHWBjZ6WSivZvgn3GRdMHBbW0OIJehW0NNN1vgDrLTUvigK0tZ4GCLoGNz7v9Rv';
+  // String secret = 'EJo_ZtoSwwZHlP5aDSVA1S5x1EWXdNWCfiiqnYjbIL699ouWIhvdwRIklezFuaaY2cgFEy3kNB-cAX5f';
+
+  // lando Live - client user login
+  String clientId = 'AUhEzZzj79Y4LEPLSSEMs-8r73nJ2wQZhwpxwkJPnmgTBoiRr7VHvJkV-WBxo9PXsOWzKF9AVfpIjt3M';
+  String secret = 'EIY4qD9ZMGbne6Wx91N1CBHC7Cjoe0oymbS9xzSJL7WfCRUDLCq7NT1MDC52LchuFfjpn0zJ42V3rq5v';
 
   // for getting the access token from Paypal
   Future<String> getAccessToken() async {

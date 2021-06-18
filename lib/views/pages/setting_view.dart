@@ -78,7 +78,7 @@ Future<Null> deleteAccount() async{
                       Navigator.pop(context);
                     },
                   ),
-                  Expanded(child: Center(child: Text('Setting',style: TextStyle(color: Colors.white,fontSize: 16),))),
+                  Expanded(child: Center(child: Text('Settings',style: TextStyle(color: Colors.white,fontSize: 16),))),
                   SizedBox(width: 50,)
                 ],
               ),

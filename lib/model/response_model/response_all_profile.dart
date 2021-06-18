@@ -19,10 +19,11 @@ class UserProfile {
   final String image;
   final String name;
   final String gender;
+  final String chat_id;
   List<QuestionAnswer> list_ques_ans;
   List<Gallery> gallery_list;
 
-  UserProfile({this.user_id,this.image,this.name,this.gender,this.list_ques_ans,this.gallery_list});
+  UserProfile({this.user_id,this.image,this.name,this.gender,this.list_ques_ans,this.gallery_list,this.chat_id});
 
   factory UserProfile.fromjson(Map<String,dynamic> json){
 
@@ -43,6 +44,7 @@ class UserProfile {
         image: json['profile'],
         name: json['name'],
       gender: json['gender'],
+      chat_id: json['firebase_chatid'],
       list_ques_ans: quesans_list,
       gallery_list: gallery_list,
     );

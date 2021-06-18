@@ -1,9 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_session/flutter_session.dart';
 import 'package:lando/api/api_services.dart';
+import 'package:lando/chat/database.dart';
 import 'package:lando/model/request_model/request_selectdestination.dart';
 import 'package:lando/model/response_model/response_destination.dart';
 import 'package:lando/model/response_model/response_message.dart';
@@ -39,6 +40,8 @@ class _HomeViewState extends State<HomeView> {
   var image_url = '';
   var name = '';
   var email = '';
+  var chat_id = '';
+  var count_status = '0';
 
   void exitApp() {
     showDialog(
@@ -94,21 +97,39 @@ class _HomeViewState extends State<HomeView> {
 
   // get data
   Future<Null> getData() async {
+    chat_id = await FlutterSession().get(MyConstant.SESSION_FIREBASE_CHAT_ID);
     image_url = await FlutterSession().get(MyConstant.SESSION_IMAGE);
     name = await FlutterSession().get(MyConstant.SESSION_NAME);
     email = await FlutterSession().get(MyConstant.SESSION_EMAIL);
-    int userid = await FlutterSession().get(MyConstant.SESSION_ID);
-    await APIServices().getDestination(userid).then((dest_value) => {
+    int user_id = await FlutterSession().get(MyConstant.SESSION_ID);
+    await APIServices().getDestination(user_id).then((dest_value) => {
           responseDestination = dest_value,
           is_showpopup = !showPopup(),
           if (is_showpopup)
             {
               DialogSelectDestination(),
             },
-          setState(() {
-            is_loading = false;
-          }),
+          getUserMessageCounts(),
         });
+  }
+
+  Future<void> getUserMessageCounts() async {
+    QuerySnapshot qShot = await Firestore.instance
+        .collection("users")
+        .document(chat_id)
+        .collection("firends")
+        .getDocuments();
+
+    qShot.documents.map((doc) {
+              if(doc.data['message_count'] == '1'){
+                print(doc.data['message_count']);
+                count_status = '1';
+              }
+            },
+    ).toList();
+    setState(() {
+      is_loading = false;
+    });
   }
 
   @override
@@ -163,13 +184,28 @@ class _HomeViewState extends State<HomeView> {
                       width: 50,
                     ),
                     Expanded(child: Image.asset(MyAssets.ASSET_IMAGE_LOGO)),
-                    IconButton(
-                      icon: Icon(Icons.chat_bubble),
-                      color: Colors.white,
-                      iconSize: 25,
-                      onPressed: () {
-                        openFriends('0');
-                      },
+                    Stack(
+                      children: <Widget>[
+                        IconButton(
+                          icon: Icon(Icons.chat_bubble),
+                          color: Colors.white,
+                          iconSize: 25,
+                          onPressed: () {
+                            openFriends('0');
+                          },
+                        ),
+                        Container(
+                          width: 40,
+                          margin: EdgeInsets.only(top: 10),
+                          alignment: Alignment.topRight,
+                          child: count_status == '1' ? Container(
+                                width: 10,height: 10,decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.green
+                              ), child: Text(''),
+                              ) : Text(''),
+                          ),
+                      ],
                     ),
                     _simplePopup()
                   ],
@@ -345,6 +381,7 @@ class _HomeViewState extends State<HomeView> {
       return false;
     }
   }
+
 }
 
 class MyDrawer extends StatelessWidget {
