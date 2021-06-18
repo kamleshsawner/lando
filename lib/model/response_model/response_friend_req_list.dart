@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_session/flutter_session.dart';
+import 'package:lando/chat/database.dart';
 import 'package:lando/model/response_model/response_destination_user.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:flutter/material.dart';
@@ -26,8 +28,9 @@ class ReqUser{
   int is_blocked;
   int is_friend_blocked;
   String device_token;
+  String count;
 
-  ReqUser({this.id,this.name,this.image,this.status,this.firebase_chatid,this.is_blocked,this.is_friend_blocked,this.device_token});
+  ReqUser({this.id,this.name,this.image,this.status,this.firebase_chatid,this.is_blocked,this.is_friend_blocked,this.device_token,this.count});
 
   factory ReqUser.fromjson(Map<String,dynamic> json){
     return ReqUser(
@@ -38,11 +41,15 @@ class ReqUser{
       firebase_chatid : json['firebase_chatid'],
       is_blocked: 1,
       is_friend_blocked: 1,
-      device_token: ''
+      device_token: '',
+        count: ''
     );
   }
 
   factory ReqUser.fromjsonforfriends(Map<String,dynamic> json){
+
+    Stream<QuerySnapshot> chats;
+
     return ReqUser(
       id: json['id'],
       name: json['name'],
@@ -51,7 +58,8 @@ class ReqUser{
       firebase_chatid : json['firebase_chatid'],
       is_blocked: json['is_blocked'],
       is_friend_blocked: json['is_friend_blocked'],
-        device_token: json['device_token']
+        device_token: json['device_token'],
+        count: ''
     );
   }
 
@@ -64,7 +72,8 @@ class ReqUser{
       firebase_chatid : json['firebase_chatid'],
       is_blocked: 1,
       is_friend_blocked: 1,
-      device_token: ''
+      device_token: '',
+        count: ''
     );
   }
 
@@ -160,14 +169,17 @@ class FirendAdapterView extends StatelessWidget{
 
   final ReqUser selected_friend;
   final String loginuser_name;
-  const FirendAdapterView({Key key, this.selected_friend,this.loginuser_name}) : super(key: key);
+  final String mychat_id;
+  const FirendAdapterView({Key key, this.selected_friend,this.loginuser_name,this.mychat_id}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
 
+    print('login chat id - $mychat_id');
+
     return GestureDetector(
       onTap: (){
-        print('image -'+selected_friend.image);
+        DatabaseMethods().updateMyMessageCounte(mychat_id,selected_friend.firebase_chatid,'0');
         Navigator.push(context, MaterialPageRoute(
             builder: (context) => ChatView(reqUser: selected_friend,)
         ));
@@ -207,9 +219,25 @@ class FirendAdapterView extends StatelessWidget{
                   ),
                   ),
                 )),
-                Container(
-                    margin: EdgeInsets.only(right: 25),
-                    child: Icon(Icons.chat_bubble_outline,color: Colors.white,))
+                StreamBuilder(
+                    stream: Firestore.instance
+                        .collection('users')
+                        .document(mychat_id)
+                        .collection('firends')
+                        .document(selected_friend.firebase_chatid).snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return Container(
+                            margin: EdgeInsets.only(right: 25),
+                            child: Icon(Icons.chat_bubble_outline,color: Colors.white,));
+                      }
+                      var userDocument = snapshot.data;
+                      return Container(
+                          margin: EdgeInsets.only(right: 25),
+                          child: Icon(Icons.chat_bubble_outline,
+                            color: userDocument['message_count'] == '0' ? Colors.white :Colors.green,));
+                    }
+                )
               ],
             ),
             SizedBox(height: 5,),
@@ -218,6 +246,14 @@ class FirendAdapterView extends StatelessWidget{
         ),
       ),
     );
+  }
+
+  String getChatRoomId(String a, String b) {
+    if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
+      return "$b\_$a";
+    } else {
+      return "$a\_$b";
+    }
   }
 
 }

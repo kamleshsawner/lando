@@ -88,14 +88,14 @@ class PaypalPaymentState extends State<PaypalPayment> {
     String subTotalAmount = widget.amount;
     String shippingCost = '0';
     int shippingDiscountCost = 0;
-    String userFirstName = 'Gulshan';
-    String userLastName = 'Yadav';
-    String addressCity = 'Delhi';
-    String addressStreet = 'Mathura Road';
-    String addressZipCode = '110014';
-    String addressCountry = 'India';
-    String addressState = 'Delhi';
-    String addressPhoneNumber = '+919990119091';
+    String userFirstName = '';
+    String userLastName = '';
+    String addressCity = '';
+    String addressStreet = '';
+    String addressZipCode = '';
+    String addressCountry = 'UK';
+    String addressState = 'UK';
+    String addressPhoneNumber = '';
 
     Map<String, dynamic> temp = {
       "intent": "sale",

@@ -6,12 +6,15 @@ import 'package:flutter_session/flutter_session.dart';
 import 'package:lando/api/api_services.dart';
 import 'package:lando/chat/auth.dart';
 import 'package:lando/chat/database.dart';
+import 'package:lando/firebase/firebase_auth.dart';
 import 'package:lando/model/request_model/request_signup.dart';
 import 'package:lando/model/response_model/response_login.dart';
 import 'package:lando/model/user.dart';
 import 'package:lando/util/myassets.dart';
 import 'package:lando/util/mycolors.dart';
 import 'package:lando/util/myconstant.dart';
+import 'package:lando/util/mystrings.dart';
+import 'package:lando/util/session_manager.dart';
 import 'package:lando/util/utility.dart';
 import 'package:lando/views/pages/question_view.dart';
 import 'package:lando/views/pages/signin_option_view.dart';
@@ -59,7 +62,6 @@ class _SignUpViewState extends State<SignUpView> {
   // submit
   void _submit() async{
     final isValid = _formkey.currentState.validate();
-
     if(!myValidtion()){
       return;
     }else if (!isValid) {
@@ -71,7 +73,7 @@ class _SignUpViewState extends State<SignUpView> {
       requestSignup.device_token = token;
       responseLogin = await APIServices().userSignup(requestSignup);
       if(responseLogin.status==200){
-        setData();
+        setSuccess();
       }else{
         showerror(responseLogin.message);
       }
@@ -79,53 +81,19 @@ class _SignUpViewState extends State<SignUpView> {
     _formkey.currentState.save();
   }
 
-  void setData() async{
-    var session = FlutterSession();
-    await session.set(MyConstant.SESSION_ID, responseLogin.user.id);
-    await session.set(MyConstant.SESSION_FIREBASE_CHAT_ID, responseLogin.user.firebase_chatid);
-    await session.set(MyConstant.SESSION_NAME, responseLogin.user.name);
-    await session.set(MyConstant.SESSION_EMAIL, responseLogin.user.email);
-    await session.set(MyConstant.SESSION_DOB, responseLogin.user.birth_date);
-    await session.set(MyConstant.SESSION_PHONE, responseLogin.user.mobile);
-    await session.set(MyConstant.SESSION_IMAGE, responseLogin.user.image);
-    await session.set(MyConstant.SESSION_GENDER, responseLogin.user.gender);
-    await session.set(MyConstant.SESSION_IS_LOGIN, true);
-
-    firebasesingUp();
-
-    // setState(() {
-    //   is_loading =false;
-    // });
-    // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => QuestionsView()));
-
-  }
-
-
-    firebasesingUp() async {
-    setState(() {
-      is_loading =true;
-    });
-    AuthService authService = new AuthService();
-    DatabaseMethods databaseMethods = new DatabaseMethods();
-    await authService.signUpWithEmailAndPassword(requestSignup.email,
-        requestSignup.email).then((result){
-            if(result != null){
-              Map<String,String> userDataMap = {
-                "userName" : responseLogin.user.firebase_chatid,
-                "userEmail" : requestSignup.email,
-                "token" : token
-              };
-              print('user info - '+userDataMap.toString());
-              databaseMethods.addUserInfo(userDataMap);
-              setState(() {
-                  is_loading =false;
-              });
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => QuestionsView()));
-            }
+  void setSuccess() async{
+    MyFirebaseAuth().firebaseSignUp(responseLogin.user,token).then((success) {
+      if(success){
+        SessionManager().startSession(responseLogin.user);
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => QuestionsView()));
+      }else{
+        Utility.showToast(MyString.ERROR_MESSAGE);
+      }
+      setState(() {
+        is_loading =false;
       });
+    });
   }
-
-
 
   void showerror(String message) {
     setState(() {

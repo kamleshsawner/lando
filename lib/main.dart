@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_session/flutter_session.dart';
 import 'package:lando/util/my_routes.dart';
@@ -23,7 +22,7 @@ void main() async{
             visualDensity: VisualDensity.adaptivePlatformDensity,
           ),
           // home: GetStartedView()
-          home: user_id == null || user_id == '' ?  GetStartedView() :HomeView()
+          home: user_id == null || user_id == '' ?  GetStartedView()  :HomeView()
       )
   );
 }

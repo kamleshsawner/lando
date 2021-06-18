@@ -1,7 +1,7 @@
 
 class MyConstant{
 
-  static const String TEST_VERIOSN_APP= 'Test Version : 1.0.0.9';
+  static const String TEST_VERIOSN_APP= 'App Version : 1.0.0';
   static const String NAV_LOCATION= 'Lando Location';
   static const String NAV_PROFILE= 'Profile';
   static const String NAV_FRIENDS= 'Friends';
@@ -17,7 +17,7 @@ class MyConstant{
   static const String SETTING_DESTINATION = 'Destination';
   static const String SETTING_BLOC_USER = 'Blocked Users';
   static const String SETTING_DELETE = 'Delete Account';
-  static const String SETTING_TERMS = 'Terms & Condition';
+  static const String SETTING_TERMS = 'Terms & Conditions';
   static const String SETTING_PRIVACY = 'Privacy Policy';
   static const String SETTING_ABOUT = 'About Us';
   static const String SETTING_HELP = 'Help / Contact Us';
